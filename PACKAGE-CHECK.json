@@ -1,0 +1,42 @@
+{
+  "verification": "PASS",
+  "checks": [
+    "TypeScript + Vite build",
+    "Nested /test-repo/game/index.html HTTP preview",
+    "All assets use package-relative paths",
+    "No runtime external requests",
+    "Dialogue, menu, interior transition and mobile screenshot",
+    "No original site identity, credentials, emails or machine paths in export"
+  ],
+  "files": {
+    "index.html": "02e8fd71215fe81bf28c4d30d6771e9f8dc9b20890503a14c1cd2c07f1543c35",
+    "README.md": "c707b7b98f485b7ae1cc051ea4c0e8feffe6307e6c4626bcbd5604ac0fc584b6",
+    ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".gitignore": "b77d86bc465a36d5a19c616e70c16ad223c1e67d70cd7f3db365833019201fa6",
+    "package-lock.json": "4461e1e62d4ffa325c30230d781f52003ded126b5c84d37c90b32c143b4b8afd",
+    "package.json": "8aaacad7a22823e25438e840fe15183d5004be5528bff3683683c2814c6dd946",
+    "tsconfig.json": "ab90ece5f2e61831a46a21a4a28f4b86113810a7cbc4652893e52757f35a1c08",
+    "vite.config.ts": "4c251c6cd8467dd2dc11d82754dd7bc119b489aed0f67a63cd877f4a338b8409",
+    "app/index.html": "2d879e7d03bd9fa5787b7d12a45212f3db615e9c239aae40f4e2149c9f3f46ed",
+    "game/index.html": "bb49c859054c1abb93915733d74345f7ff3d0f0bb13a411507dcfc3a91314546",
+    ".github/workflows/pages.yml": "6fd9d6dde3b90b4c454486bab198921fde77750a2f243836ea3740e72a7abfa2",
+    "game/assets/shop-BpDrMMv6.jpg": "0a0dc69afd7ab80f1ff057f12c63ddd3703616a01d8e53e6912d5665f149359d",
+    "game/assets/index-361kL3Fi.js": "43e212e9afe69dd2529367a5a2c6c6245c670c5433f85db95789556dd24f5c54",
+    "game/assets/people-CJnqVWnF.jpg": "c6b5c4f31221cd1bddf48f6b20f86b185ec05470a6a5edf4cc6422cc79fba51b",
+    "game/assets/index-D4DzsTX7.css": "4b31d0232a45d7ccad5bcdf35cfc896214f8cff3981a4e90ce6bbb23dd6cc2e5",
+    "game/assets/panels-BYBO__8Y.jpg": "f98b440f69ea3d7f28c579677103604bbd136217d18d9e5afcd67939ccbe35d7",
+    "game/assets/items-BAmpZTly.jpg": "6a123f2a5d1244a4be2e7c9984c49d350dc3741fbcdff521e7e68cac97a6ff75",
+    "app/src/main.ts": "9e3a817dd59fa3fd4d1b24471e5af9b924dd3869c5b0cfdd7e4ccd21e0d099bd",
+    "app/src/game.css": "ae75cc0d8cfa0e2fb55f3e9cb7f8b6688cbb2ebe107228300d61fbbf3f07a468",
+    "app/src/music.ts": "bcbc3c405c7ef74cef0c4fd76c872a54afce9cede2c0049666c972fd6027e045",
+    "app/src/ambient.ts": "c1e1e03be3e1141e10650d8e678176b8da0d6f96c764672ae8e5708e40272631",
+    "app/src/vite-env.d.ts": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
+    "app/src/style.css": "f2eff6374e33112dedb7de5b4a02ef1b32bd78d61709a7f3cdfc891ce012919c",
+    "app/src/game.ts": "11e6c778e637031b1572618868b0fb4ee564359dcb4630c74f8e816f9eda9c1e",
+    "app/src/world.ts": "027cdd96bdfe874579f98aa8eab22d5aee06cb0cb04f84709272462045283e91",
+    "app/src/assets/ui/items.jpg": "6a123f2a5d1244a4be2e7c9984c49d350dc3741fbcdff521e7e68cac97a6ff75",
+    "app/src/assets/ui/panels.jpg": "f98b440f69ea3d7f28c579677103604bbd136217d18d9e5afcd67939ccbe35d7",
+    "app/src/assets/ui/shop.jpg": "0a0dc69afd7ab80f1ff057f12c63ddd3703616a01d8e53e6912d5665f149359d",
+    "app/src/assets/ui/people.jpg": "c6b5c4f31221cd1bddf48f6b20f86b185ec05470a6a5edf4cc6422cc79fba51b"
+  }
+}
