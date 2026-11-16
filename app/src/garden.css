@@ -1,0 +1,7 @@
+.talk-chip.garden-talk{width:190px;height:54px;padding:9px 10px;border:0;border-radius:10px 10px 2px 10px;background:#efe6d4;color:#4a5d3f;font-family:'Source Han Serif SC','Songti SC',STSong,serif;font-size:26px;letter-spacing:.12em;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 4px 14px rgba(74,93,63,.18),inset 0 1px 1px #fff9eb;transform:translate(-50%,-100%) scale(var(--garden-label-scale,.75));transform-origin:bottom center;z-index:3}
+.talk-chip.garden-talk[hidden]{display:none}
+.garden-talk svg{width:20px;height:20px;flex:none;color:#8d9e76}
+.talk-chip.garden-talk:after{display:block;content:'';position:absolute;left:50%;top:100%;width:1px;height:24px;background:none;border-radius:0;border-left:1px dashed rgba(74,93,63,.3);pointer-events:none}
+.garden-talk:before{content:'';position:absolute;right:0;bottom:0;width:11px;height:11px;background:#d7c6a5;clip-path:polygon(100% 0,100% 100%,0 100%);border-radius:0 0 2px 0}
+.talk-chip.garden-talk:hover{background:#f2e3c4}
+.talk-chip.garden-talk:focus-visible{outline:2px solid #4a5d3f;outline-offset:4px}

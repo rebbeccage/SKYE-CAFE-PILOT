@@ -1,0 +1,16 @@
+# Encounter portraits
+
+Generated with the built-in image_gen tool for the three circular thumbnails in the encounters panel. Original square images are preserved, with CSS circular clipping only.
+
+## ahe-watercolor.png
+
+Use case: illustration-story. Asset type: one square watercolor NPC portrait for a circular avatar in a cozy glasshouse cafe game. Hand-painted watercolor and gouache on warm cream cold-pressed paper, visible gentle pigment granulation, delicate pencil edges, pale sage wash background, muted cream/sage/oatmeal palette, soft warm light. Centered close bust, large friendly chibi head, dot eyes with one catchlight, small blush strokes, very simple features, no nose, small closed smile. Head and shoulders fill 85 percent of square; entire head/hat inside a central circular safe area; visually centered at (50%,50%). No border, circular frame, text, logo, watermark, UI or additional characters. Subject: Ah He (阿禾), young male barista, neat short warm brown hair with soft locks, cream linen shirt, oatmeal cafe apron, no hat and no beard. Warm attentive expression, hands around a small cream coffee cup at bottom of bust.
+
+## lin-watercolor.png
+
+Use case: illustration-story. Asset type: one square watercolor NPC portrait for a circular avatar in a cozy glasshouse cafe game. Hand-painted watercolor and gouache on warm cream cold-pressed paper, visible gentle pigment granulation, delicate pencil edges, pale sage wash background, muted cream/sage/oatmeal palette, soft warm light. Centered close bust, large friendly chibi head, dot eyes with one catchlight, small blush strokes, very simple features, no nose, small closed smile. Head and shoulders fill 85 percent of square; entire head/hat inside a central circular safe area; visually centered at (50%,50%). No border, circular frame, text, logo, watermark, UI or additional characters. Subject: Uncle Lin (林伯), kindly elderly male retired boat repairer, short soft silver beard and mustache, oatmeal knitted beanie, muted sage work shirt, cream wool scarf, round kindly face, very subtle smile lines. One hand resting around a small ceramic mug at lower edge. No sailing props.
+
+## tang-watercolor.png
+
+Use case: illustration-story. Asset type: one square watercolor NPC portrait for a circular avatar in a cozy glasshouse cafe game. Hand-painted watercolor and gouache on warm cream cold-pressed paper, visible gentle pigment granulation, delicate pencil edges, pale sage wash background, muted cream/sage/oatmeal palette, soft warm light. Centered close bust, large friendly chibi head, dot eyes with one catchlight, small blush strokes, very simple features, no nose, small closed smile. Head and shoulders fill 85 percent of square; entire head/hat inside a central circular safe area; visually centered at (50%,50%). No border, circular frame, text, logo, watermark, UI or additional characters. Subject: Aunt Tang (棠姨), elderly female gardener, cream wide brim straw gardening hat with pale sage ribbon in loose knot, silver-gray ear-length bob with wooden hairclip, pale sage blouse and cream linen apron. Kindly rounded face, understated smile lines. At bottom a small woven basket holding eucalyptus sprigs and chamomile. No nose, no makeup.
+
