@@ -6,3 +6,23 @@
 @media(max-width:600px){.scene-interior .scene-nav{top:8px}.scene-interior #weather-toggle{top:8px}.scene-interior .top-tools{top:45px}.scene-interior .talk-chip{top:calc(90px + var(--talk-offset,0px))!important}.scene-interior .toolbar,.scene-interior .game-nav{bottom:8px}}
 
 .snowy #weather-toggle{background:#e9eff3;border-color:#bbc7cf}.snowy #app{background:#dde3e8}
+
+/* Phones use the available viewport, including landscape; desktop framing stays unchanged. */
+@media (max-width:600px), (hover:none) and (pointer:coarse) and (max-width:1024px){
+ #app,.scene-interior #app{position:fixed;inset:0;width:100%;height:100dvh;transform:none}
+ .scene-nav,.scene-interior .scene-nav{top:calc(12px + env(safe-area-inset-top))}
+ #weather-toggle,.scene-interior #weather-toggle{top:calc(12px + env(safe-area-inset-top));left:calc(12px + env(safe-area-inset-left))}
+ .top-tools,.scene-interior .top-tools{top:calc(64px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right))}
+ .talk-chip,.scene-interior .talk-chip{top:calc(112px + env(safe-area-inset-top) + var(--talk-offset,0px))!important;right:calc(12px + env(safe-area-inset-right))!important;min-height:36px}
+ .game-nav,.scene-interior .game-nav{bottom:calc(16px + env(safe-area-inset-bottom));left:calc(12px + env(safe-area-inset-left));right:auto;gap:5px}
+ .game-nav button{width:44px;min-height:44px;font-size:11px}
+ .toolbar,.scene-interior .toolbar{bottom:calc(70px + env(safe-area-inset-bottom));left:50%;right:auto;transform:translateX(-50%);gap:5px}
+ .toolbar button{width:44px;height:42px}
+ #toast{bottom:calc(128px + env(safe-area-inset-bottom));font-size:11px}
+ .brew-progress{top:auto;bottom:calc(130px + env(safe-area-inset-bottom))}
+}
+@media (hover:none) and (pointer:coarse) and (min-width:601px) and (max-width:1024px){
+ .toolbar,.scene-interior .toolbar{bottom:calc(12px + env(safe-area-inset-bottom))}
+ #toast{bottom:76px}
+ .game-nav,.scene-interior .game-nav{bottom:calc(12px + env(safe-area-inset-bottom))}
+}
