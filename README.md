@@ -1,50 +1,33 @@
-# 玻璃间 · The Glasshouse
+# SKYE CAFE · 海岛咖啡馆
 
-可直接上传 GitHub 的完整 3D 微缩咖啡馆。包含庭院与店内两幕、人物故事、菜品解锁、订单收益、六件装扮、音乐导入与本地存档。
+当前海岛版本的完整 GitHub 上传包，含可直接部署的游戏和可编辑源码。
 
-## 最快上线：无需安装或编译
+## 最快使用：上传后直接发布
 
-1. 解压文件包，在 GitHub 新建仓库，例如 `glasshouse-cafe`。
-2. 使用 **Add file → Upload files**，把本目录内的文件和目录上传至仓库根目录。不要只上传 ZIP，也不要多套一层目录。仓库根目录应直接看到 `index.html`、`game/`、`app/` 和 `package.json`。
-3. 在仓库 **Settings → Pages → Build and deployment** 中，Source 选择 **Deploy from a branch**，选择 `main`（或实际默认分支）的 `/(root)`，保存。
-4. 如果同时上传了自动发布工作流，使用此分支发布方式时，可在 Actions 中停用 Publish Glasshouse to GitHub Pages，避免同时运行两套发布流程。
-5. 等待发布完成，从 Pages 设置页取得实际地址。游戏入口格式：
+1. 解压 ZIP，在 GitHub 新建仓库。
+2. 选择 **Add file → Upload files**，上传本文件夹里面的文件与文件夹。不要只上传 ZIP，也不要把整个外层文件夹套进仓库。
+3. 仓库根目录应直接出现 `index.html`、`game/`、`app/`、`package.json`。
+4. **Settings → Pages → Source** 选择 **Deploy from a branch**，选 `main` 的 `/(root)`，保存。
+5. 从 Pages 设置页打开实际发布地址。游戏入口格式为：
 
-```text
-https://你的用户名.github.io/仓库名/game/index.html
-```
+`https://你的用户名.github.io/仓库名/game/index.html`
 
-这是地址格式示例，不是已创建的网址。仅上传源码不等于已经开启了 Pages。
+地址是格式示例；本包尚未替你创建或上传 GitHub 仓库。网页上传可以分批进行，保持原有目录结构。
 
-## 自动构建发布：用于后续开发
+## 包内内容
 
-包内已提供 `.github/workflows/pages.yml`。完整上传隐藏的 `.github` 目录后，将 Settings → Pages 的 Source 改为 **GitHub Actions**，随后在 Actions 中运行 **Publish Glasshouse to GitHub Pages**。之后推送 main/master 会自动构建并发布。
+- `index.html`：网站首页，自动进入游戏。
+- `game/`：已经构建的完整静态游戏，内含 JS、CSS、图片和默认音乐，无需安装或编译。
+- `app/`：TypeScript 场景源码、UI 素材和音乐。
+- `package.json` / `package-lock.json`：锁定的开发依赖。
+- `scripts/stage-courtyard.mjs`：构建打包步骤。
+- `.github/workflows/pages.yml`：可选的自动构建发布流程。
+- `.nojekyll`：静态资源发布配置。
+- `PACKAGE-CHECK.json`：文件完整性与资源检查结果。
 
-若网页上传未带上隐藏目录，可用 Add file → Create new file 手动创建 `.github/workflows/pages.yml`，复制本包对应文件内容。
+## 后续修改源码
 
-官方发布说明：https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
-
-## 目录
-
-```text
-index.html                    根页面，自动进入 game/index.html
-game/                         已构建的静态游戏，可立即部署
-  index.html
-  assets/                     JS、CSS、全部水彩 UI 素材
-app/
-  index.html                  开发入口
-  src/                        TypeScript、样式、3D 场景源码
-    assets/ui/                用户提供的 UI 图片
-.github/workflows/pages.yml   GitHub Pages 自动构建发布
-package.json
-package-lock.json
-tsconfig.json
-vite.config.ts
-```
-
-## 本地开发
-
-安装 Node.js 22 或更高版本，在本目录执行：
+安装 Node.js 22.12 或更高版本后执行：
 
 ```sh
 npm ci
@@ -52,28 +35,16 @@ npm run dev
 npm run build
 ```
 
-构建会更新 `game/`。使用分支根目录发布时，修改源码后请重新构建并把更新后的 `game/` 一起提交；使用 GitHub Actions 时会自动构建。
+构建会更新 `game/` 并生成 `dist/`。使用分支发布时，将更新后的 `game/` 一起提交。
 
-## 其他静态托管
+如果希望提交源码后自动构建，上传隐藏目录 `.github/`，再把 **Settings → Pages → Source** 改为 **GitHub Actions**。不使用自动构建时，可不上传 `.github/`，按上面的分支方式发布即可。
 
-将根目录 `index.html` 与完整 `game/` 上传至站点根目录，入口即为 `https://你的域名/game/index.html`。无需服务器、环境变量或原 Sites 账号。
+## 当前版本
 
-请通过 HTTP/HTTPS 访问。直接双击 `game/index.html` 不能保证 JavaScript 模块正常加载。
+保留咖啡馆近景、自由环绕与缩放、进店、点击座位坐下、人物故事、经营收益、装扮与本地存档。新增真实 3D 环岛、沙滩、浅海、登滩道、游船及游客上下船；「全岛」按钮用于切换取景。支持晴天、雨天、雪天与暮色。室内默认轻音乐，室外有环境音；声音需首次点击后启用。
 
-## 游戏使用说明
+存档属于浏览器和当前域名；已有进度可先在原游戏导出，再在新地址导入。包内没有个人存档、账号、邮箱、Sites 站点配置或访问凭据。
 
-拖动环视、滚轮缩放、点击门进入店内。人物的「聊聊」以及相遇、菜单、装扮入口可推进玩法。故事、金币、菜品和装扮保存在当前浏览器，菜单内可以导出和恢复存档，更换域名后可用它迁移进度。
+请通过 HTTP/HTTPS 访问，直接双击 HTML 无法保证模块加载。需要支持 WebGL 2 的浏览器。本包是 H5 网页游戏，不是原生微信小程序工程。
 
-标准音频可在菜单中导入，音频与音量仅保存在当前设备，不上传到服务器。原先提供的 MGG0 文件无法解码，本包未包含该音乐。浏览器可能要求点击音乐按钮后才播放。
-
-运行时字体使用设备字体，脚本与图片均随包提供，不需要外部 CDN。3D 需要支持 WebGL 2 的现代浏览器，手机流畅度取决于 GPU。此版本按浏览器体验制作，尚未在微信真机中完成适配测试。
-
-## 微信小程序说明
-
-本包是 H5 网页游戏，并非原生微信小程序或微信小游戏工程。申请小程序并确认主体、web-view 资格、业务域名等要求后，才能确定接入方式。拥有 HTTPS 地址不代表已满足微信接入条件。可先用浏览器给朋友测试。
-
-## 素材与授权
-
-水彩 UI 素材由用户提供，未额外添加开放授权。公开分发或商用前请确认素材的使用权限。Three.js、Vite 等依赖的许可见各项目及 npm 包。
-
-包内未包含原 Sites 的站点 ID、账号、邮箱、访问凭据、缓存、调试日志或 node_modules。
+素材沿用用户提供的美术与现有游戏资产，未另行声明开放授权；第三方依赖许可见对应 npm 包。
