@@ -25,7 +25,7 @@ export const materials={
   green:mat(0xa8b98f),greenDark:mat(0x718777),greenLight:mat(0xb8c79b),pot:mat(0xb2865c),
   soil:mat(0x524637),trunk:mat(0x927652),skin:mat(0xf0c9a8,.68),hair:mat(0x665440,.75),
   apron:mat(0x9b936b),shirt:mat(0xf0e9d8),pants:mat(0x757b63),shoe:mat(0x786d57),
-  coffee:mat(0x433023,.25),black:mat(0x363b35),gravel:mat(0xbebda5),
+  velvet:new T.MeshPhysicalMaterial({color:0x778568,roughness:.9,sheen:1,sheenColor:0xc6cfb4,sheenRoughness:.72}),velvetPiping:mat(0xb5baa2,.9),coffee:mat(0x433023,.25),black:mat(0x363b35),gravel:mat(0xbebda5),
   glass:new T.MeshPhysicalMaterial({color:0xe5eee4,transparent:true,opacity:.14,roughness:.05,metalness:.12,depthWrite:false,side:T.DoubleSide,envMapIntensity:1.5}),
   glassJar:new T.MeshPhysicalMaterial({color:0xede8d9,transparent:true,opacity:.25,roughness:.12,depthWrite:false,metalness:.18}),
   pendantLight:new T.MeshStandardMaterial({color:0xf2d9a0,emissive:0xffd092,emissiveIntensity:1.65,roughness:.24}),
@@ -65,6 +65,15 @@ function chair(p:T.Object3D,x:number,y:number,z:number,angle=0,s=1){
  for(let i=-4;i<=4;i++){const xx=i*.047,top=.78+Math.sqrt(Math.max(0,.27*.27-xx*xx))*1.15;beam(g,V(xx,.59,-.25),V(xx,top,-.29),.008,materials.wood,5)}
  for(let k=0;k<7;k++){const yy=.61+k*.055;const width=yy<.78?.25:Math.sqrt(Math.max(0,.27*.27-Math.pow((yy-.78)/1.15,2)));beam(g,V(-width,yy,-.285),V(width,yy,-.285),.007,materials.wood,5)}
  for(let i=-4;i<=4;i++){beam(g,V(i*.052,.591,-.2),V(i*.052,.591,.2),.005,materials.darkWood,4);beam(g,V(-.2,.505,i*.052),V(.2,.505,i*.052),.005,materials.darkWood,4)}
+ if(y>.5){
+  // Tailored upholstered inserts retain the established wooden silhouette and seat footprint.
+  box(g,.49,.075,.43,0,.608,0,materials.velvet,.035);
+  const back=box(g,.44,.34,.085,0,.86,-.242,materials.velvet,.04);back.rotation.x=-.1;
+  rail(g,[V(-.22,.646,-.18),V(-.245,.646,0),V(-.22,.646,.18),V(0,.646,.208),V(.22,.646,.18),V(.245,.646,0),V(.22,.646,-.18),V(0,.646,-.208),V(-.22,.646,-.18)],.004,materials.velvetPiping);
+  rail(g,[V(-.19,.73,-.191),V(-.21,.88,-.194),V(-.17,1.005,-.202),V(0,1.018,-.202),V(.17,1.005,-.202),V(.21,.88,-.194),V(.19,.73,-.191)],.004,materials.velvetPiping);
+  for(const xx of [-.105,.105])ball(g,xx,.88,-.193,.014,.014,.007,materials.velvetPiping);
+  g.userData.upholstery='sage velvet seat and back';
+ }
  if(y<.5){g.updateWorldMatrix(true,true);const inverse=g.matrixWorld.clone().invert(),bins=new Map<Material,T.BufferGeometry[]>(),remove:T.Mesh[]=[];g.traverse(o=>{if(!(o instanceof T.Mesh))return;const m=o.material as Material,geo=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();geo.applyMatrix4(inverse.clone().multiply(o.matrixWorld));geo.deleteAttribute('uv1');geo.deleteAttribute('tangent');if(!bins.has(m))bins.set(m,[]);bins.get(m)!.push(geo);remove.push(o)});for(const [m,geos] of bins){const combined=mergeGeometries(geos,false);if(combined)mesh(combined,m,g);geos.forEach(geo=>geo.dispose())}remove.forEach(o=>o.removeFromParent())}
  return g;
 }
@@ -103,7 +112,7 @@ export function buildWorld(scene:T.Scene){
  };
  const hit=(id:string,label:string,x:number,y:number,z:number,w:number,h:number,d:number)=>{const m=mesh(new T.BoxGeometry(w,h,d),new T.MeshBasicMaterial({visible:false}),root,x,y,z);m.userData.dynamic=true;m.userData.hit=id;hotspots.push({id,label,mesh:m,point:V(x,y,z)});return m};
  // A gently raised travertine plinth, garden paths and squared paving.
- box(root,10.3,.6,9.9,.45,-.12,.45,materials.stone,.13);box(root,10.1,.055,9.7,.45,.198,.45,materials.tile,.08);
+ box(root,10.3,.14,9.9,.45,.11,.45,materials.stone,.035);box(root,10.1,.055,9.7,.45,.198,.45,materials.tile,.08);
  for(let x=-4;x<5.35;x+=.8)for(let z=-4;z<5.2;z+=.8){if(x<4.3&&z<4.3)continue;box(root,.77,.024,.77,x,.236,z,materials.tile,.025)}
  for(let x=-4;x<=4;x+=.8)for(let z=-4;z<=4;z+=.8){if(x>-3&&x<3&&z<2.5&&z>-2.4)continue; if(random()<.1)continue;box(root,range(.65,.77),.024,range(.65,.77),x+range(-.04,.04),.236,z+range(-.04,.04),random()<.65?materials.tile:materials.stone,.025)}
  // Fine pebbles are contained in planted edges.
@@ -114,8 +123,12 @@ export function buildWorld(scene:T.Scene){
  for(const x of [-2.8,2.8])for(let row=0;row<3;row++)for(let i=0;i<7;i++)box(root,.15,.185,.61,x,.36+row*.19,-2.37+i*.67,materials.stone,.02);
  for(const z of [-2.8,2.13])for(let row=0;row<3;row++)for(let i=0;i<9;i++)box(root,.61,.185,.13,-2.68+i*.67,.36+row*.19,z,materials.stone,.02);
  for(let x=-2.4;x<2.6;x+=.6)for(let z=-2.48;z<2.1;z+=.6)box(root,.59,.04,.59,x,.845,z,((Math.round(x*2)+Math.round(z*2))%3)?materials.tile:materials.stone,.012);
- for(let i=0;i<4;i++)box(root,1.65,.15,1.35-i*.22,-.65,.3+i*.15,2.75-i*.2,materials.stone,.025);
- for(let i=0;i<5;i++)box(root,1.05,.04,.38,-.65+Math.sin(i*.6)*.1,.26,3.15+i*.23,materials.stone,.03);
+ // Two shallow 150mm steps above a short paved approach; interior stays +.85m.
+ const approach=new T.Shape();approach.moveTo(3.05,.23);approach.lineTo(4.65,.23);approach.lineTo(4.65,.26);approach.lineTo(3.05,.55);approach.closePath();
+ const ramp=new T.ExtrudeGeometry(approach,{depth:1.95,bevelEnabled:false});ramp.rotateY(-Math.PI/2);ramp.translate(.325,0,0);mesh(ramp,materials.stone,root);
+ box(root,1.95,.15,.35,-.65,.625,2.875,materials.stone,.018);
+ box(root,1.95,.30,.6,-.65,.70,2.40,materials.stone,.018);
+ for(let i=0;i<5;i++)box(root,1.05,.04,.38,-.65+Math.sin(i*.6)*.1,.26,3.85+i*.23,materials.stone,.03);
  // Blackened steel structure, clear glass panes and a pitched glass roof.
  const minX=-2.75,maxX=2.75,front=2.1,back=-2.77,eave=3.2,ridge=4.575;
  for(const x of [minX,maxX]){for(let z=back;z<front+.1;z+=.974)box(root,.065,eave-floorY,.065,x,(eave+floorY)/2,z,materials.frame,.009);for(const yy of [floorY,1.83,2.87,eave])box(root,.075,.075,4.95,x,yy,-.335,materials.frame,.009);for(let i=0;i<5;i++)box(root,.018,eave-floorY,.98,x,(eave+floorY)/2,back+.487+i*.974,materials.glass,.001)}
@@ -141,7 +154,7 @@ export function buildWorld(scene:T.Scene){
  hit('door','推门进入',-1.07,1.9,front+.1,1.08,2.1,.22);
  const entranceSign=group(root,-1.1,3.39,front+.1);
  box(entranceSign,1.8,.27,.07,0,0,0,materials.wood,.018);
- label(entranceSign,'SKYE CAFE',1.72,.235,0,0,.041,'#4a5d3f','#efe9dc');
+ label(entranceSign,'SKYE ISLAND',1.72,.235,0,0,.041,'#4a5d3f','#efe9dc');
  for(const x of [-.84,.84])ball(entranceSign,x,0,.045,.014,.014,.008,materials.brass);
  
  // Wall shelf, cabinet joinery and the heart of the cafe.
@@ -153,7 +166,7 @@ export function buildWorld(scene:T.Scene){
  for(const x of [-2.08,0,2.08])box(shelfWall,.065,2.3,.07,x,2,-2.55,materials.wood,.01);
  // Shelf contents are supplied by the detailed interior layer; preserve the scene RNG.
  for(let i=0;i<39;i++)random();
- const machine=group(counter,-.2,1.07,.05);box(machine,.98,.64,.5,0,.4,0,materials.brass,.05);box(machine,.94,.05,.68,0,.055,.06,materials.brassDark,.018);box(machine,.87,.025,.4,0,.09,.14,materials.frameEdge,.01);box(machine,.9,.045,.56,0,.75,0,materials.brass,.015);
+ const machine=group(counter,-.2,1.07,.05,Math.PI);box(machine,.98,.64,.5,0,.4,0,materials.brass,.05);box(machine,.94,.05,.68,0,.055,.06,materials.brassDark,.018);box(machine,.87,.025,.4,0,.09,.14,materials.frameEdge,.01);box(machine,.9,.045,.56,0,.75,0,materials.brass,.015);
  for(const x of [-.26,.26]){cyl(machine,.08,.08,.12,x,.27,.29,materials.frame);beam(machine,V(x,.26,.32),V(x+.15,.26,.48),.035,materials.black);ball(machine,x,.55,.265,.045,.045,.025,materials.black);cyl(machine,.032,.032,.06,x,.22,.32,materials.brass)}
  box(machine,.25,.14,.02,0,.53,.265,materials.black,.01);for(let i=0;i<3;i++)box(machine,.032,.015,.007,-.07+i*.07,.54,.28,materials.brass,.002);
  for(let i=0;i<12;i++)box(machine,.82,.006,.012,0,.11,-.02+i*.026,materials.brassDark,.002);
@@ -183,7 +196,7 @@ export function buildWorld(scene:T.Scene){
  const canopyProfile=[new T.Vector2(0,2.77),new T.Vector2(.92,2.33),new T.Vector2(.92,2.314),new T.Vector2(0,2.754)];mesh(new T.LatheGeometry(canopyProfile,24),materials.cream,umbrellaShade);for(let i=0;i<12;i++){const a=i*Math.PI/6;beam(umbrellaShade,V(0,2.77,0),V(Math.cos(a)*.92,2.33,Math.sin(a)*.92),.008,materials.wood)}ball(umbrella,0,2.83,0,.04,.065,.04,materials.brass);
  // Detailed outward-facing, double-sided A-frame at the left of the entrance.
  const sign=group(root,-2.15,.26,3.85,0);sign.userData.dynamic=true;
- for(const side of [-1,1]){const panel=group(sign,0,.85,side*.14);panel.rotation.x=side*.12;box(panel,.81,1.02,.08,0,0,0,materials.wood,.025);box(panel,.69,.87,.09,0,0,0,materials.frame,.012);const title=label(panel,'SKYE CAFE',.62,.17,0,.22,side*.052);if(side<0)title.rotation.y=Math.PI;const menu=label(panel,'COFFEE  /  TEA',.62,.11,0,-.02,side*.053);if(side<0)menu.rotation.y=Math.PI;for(const x of [-.36,.36])for(const y of [-.45,.45])ball(panel,x,y,side*.06,.015,.015,.01,materials.brass)}
+ for(const side of [-1,1]){const panel=group(sign,0,.85,side*.14);panel.rotation.x=side*.12;box(panel,.81,1.02,.08,0,0,0,materials.wood,.025);box(panel,.69,.87,.09,0,0,0,materials.frame,.012);const title=label(panel,'SKYE ISLAND',.62,.17,0,.22,side*.052);if(side<0)title.rotation.y=Math.PI;const menu=label(panel,'COFFEE  /  TEA',.62,.11,0,-.02,side*.053);if(side<0)menu.rotation.y=Math.PI;for(const x of [-.36,.36])for(const y of [-.45,.45])ball(panel,x,y,side*.06,.015,.015,.01,materials.brass)}
  for(const x of [-.36,.36])for(const z of [-.37,.37])beam(sign,V(x,.02,z),V(x,1.4,0),.035,materials.wood);
  beam(sign,V(-.43,1.4,0),V(.43,1.4,0),.025,materials.brass);for(const x of [-.36,.36])beam(sign,V(x,.5,-.25),V(x,.5,.25),.012,materials.brass);
  hit('sign','今日手冲：花香与柑橘',-2.15,1.05,3.85,.9,1.5,.65);
@@ -224,7 +237,7 @@ export function buildWorld(scene:T.Scene){
    if(refillStream.visible){const target=cupTarget.clone().add(V(0,.113,0)),direction=target.clone().sub(anchor);refillStream.position.copy(anchor).add(target).multiplyScalar(.5);refillStream.scale.y=direction.length();refillStream.quaternion.setFromUnitVectors(V(0,1,0),direction.normalize())}
    tableCups[service.tableIndex].children[2].position.y=.09+.058*service.transfer;
    door.rotation.y=inside||service.doorOpen?-1.65:0;
-   const barista=actors[0];stream.visible=order>0&&barista.kettle!.rotation.z>.3;
+   const barista=actors[0];stream.visible=!barista.root.userData.suppliedAsset&&order>0&&barista.kettle!.rotation.z>.3;
    if(stream.visible){barista.kettleTip!.getWorldPosition(tip);const direction=pourTarget.clone().sub(tip);stream.position.copy(tip).add(pourTarget).multiplyScalar(.5);stream.scale.y=direction.length();stream.quaternion.setFromUnitVectors(V(0,1,0),direction.normalize())}
  }
  hit('table','坐一会儿，听咖啡落下',-.75,1.58,.55,.7,.12,.7);
@@ -260,7 +273,7 @@ export function buildWorld(scene:T.Scene){
  const furnitureClearances=[counter,shelfWall,heroTable,...heroChairs,windowTable,windowChair,bed].map(o=>{const b=new T.Box3().setFromObject(o);return Math.min(b.min.x+2.75,2.75-b.max.x,b.min.z+2.77,2.1-b.max.z)});
  let shelfRoofClearance=Infinity;
  shelfWall.traverse(o=>{if(!(o instanceof T.Mesh))return;const bounds=new T.Box3().setFromObject(o);const outerX=Math.max(Math.abs(bounds.min.x),Math.abs(bounds.max.x));shelfRoofClearance=Math.min(shelfRoofClearance,ridge-.5*outerX-bounds.max.y)});
- const diagnostics=()=>({patioGuest:{role:actors[3].role,position:actors[3].root.position.toArray(),chair:[3.55,.26,-.42],facing:actors[3].root.rotation.y},overviewBounds,rugCenter:decorations.rug.position.toArray(),pendants:globes.map(g=>({visible:g.visible,emissive:(g.material as T.MeshStandardMaterial).emissiveIntensity,position:g.position.toArray()})),tang:{role:actors[2].role,position:actors[2].root.getWorldPosition(V(0,0,0)).toArray(),chair:actors[2].role==='garden-tang'?null:[3.55,.26,-.42]},snowSurfaces,seating,furnitureClearances,shelfRoofClearance,countertopY:1.91,heroBounds:{min:heroFrameBounds.min.toArray(),max:heroFrameBounds.max.toArray()},kettleMinY:new T.Box3().setFromObject(actors[0].kettle!).min.y,kettleGripError:actors[0].armR.localToWorld(V(.025,-.34,.025)).distanceTo(actors[0].kettleGrip!.getWorldPosition(V(0,0,0))),umbrellaSpread:umbrellaShade.scale.x,linUmbrellaSpread:linShade.scale.x,umbrellaPoleScale:umbrella.scale.toArray(),service:{...service,server:actors[4].root.position.toArray(),cup:tableCups[service.tableIndex].position.toArray(),pouring:refillStream.visible,tableCount:tableCups.length,tableTarget:cupTarget.toArray()},sign:'SKYE CAFE'});
+ const diagnostics=()=>({upholsteredChairs:[...heroChairs,windowChair].map(c=>c.userData.upholstery),machineDirection:V(0,0,1).transformDirection(machine.matrixWorld).toArray(),machinePosition:machine.getWorldPosition(V(0,0,0)).toArray(),baristaPosition:actors[0].root.getWorldPosition(V(0,0,0)).toArray(),patioGuest:{role:actors[3].role,position:actors[3].root.position.toArray(),chair:[3.55,.26,-.42],facing:actors[3].root.rotation.y},overviewBounds,rugCenter:decorations.rug.position.toArray(),pendants:globes.map(g=>({visible:g.visible,emissive:(g.material as T.MeshStandardMaterial).emissiveIntensity,position:g.position.toArray()})),tang:{role:actors[2].role,position:actors[2].root.getWorldPosition(V(0,0,0)).toArray(),chair:actors[2].role==='garden-tang'?null:[3.55,.26,-.42]},snowSurfaces,seating,furnitureClearances,shelfRoofClearance,countertopY:1.91,heroBounds:{min:heroFrameBounds.min.toArray(),max:heroFrameBounds.max.toArray()},kettleMinY:new T.Box3().setFromObject(actors[0].kettle!).min.y,kettleGripError:actors[0].armR.localToWorld(V(.025,-.34,.025)).distanceTo(actors[0].kettleGrip!.getWorldPosition(V(0,0,0))),umbrellaSpread:umbrellaShade.scale.x,linUmbrellaSpread:linShade.scale.x,umbrellaPoleScale:umbrella.scale.toArray(),service:{...service,server:actors[4].root.position.toArray(),cup:tableCups[service.tableIndex].position.toArray(),pouring:refillStream.visible,tableCount:tableCups.length,tableTarget:cupTarget.toArray()},sign:'SKYE ISLAND'});
  const seasonalFoliage:T.Mesh[]=[];const summerBatches=new Map<Material,T.BufferGeometry[]>();const patioChairs:T.Group[]=[];root.traverse(o=>{if(o.userData.snowChair&&o.position.y<.5)patioChairs.push(o as T.Group)});
  const batches=new Map<Material,{geos:T.BufferGeometry[],shadow:boolean}>();const toRemove:T.Mesh[]=[];
  root.traverse(o=>{if(!(o instanceof T.Mesh))return;let a:T.Object3D|null=o;while(a&&a!==root){if(a.userData.dynamic)return;a=a.parent}const m=o.material as Material;const wp=o.getWorldPosition(new T.Vector3());const outdoor=Math.abs(wp.x)>2.8||wp.z>2.2||wp.z< -2.8||wp.y>3.3;const seasonal=m===materials.trunk||outdoor&&[materials.green,materials.greenLight,materials.greenDark].includes(m as T.MeshStandardMaterial);if(seasonal){const geo=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();geo.applyMatrix4(o.matrixWorld);geo.deleteAttribute('uv1');geo.deleteAttribute('tangent');if(!summerBatches.has(m))summerBatches.set(m,[]);summerBatches.get(m)!.push(geo);toRemove.push(o);return}if(!batches.has(m))batches.set(m,{geos:[],shadow:o.castShadow});const geo=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();geo.applyMatrix4(o.matrixWorld);geo.deleteAttribute('uv1');geo.deleteAttribute('tangent');batches.get(m)!.geos.push(geo);toRemove.push(o)});
@@ -269,7 +282,7 @@ export function buildWorld(scene:T.Scene){
 }
 
 export function updatePeople(actors:Actor[],t:number,order:number){
- for(const a of actors){if(a.role==='garden-tang')continue;const f=t+a.phase;a.head.rotation.z=Math.sin(f*.65)*.045;a.head.rotation.y=Math.sin(f*.4)*.13;
+ for(const a of actors){if(a.role==='garden-tang'||a.root.userData.suppliedAsset)continue;const f=t+a.phase;a.head.rotation.z=Math.sin(f*.65)*.045;a.head.rotation.y=Math.sin(f*.4)*.13;
  if(a.role==='barista'){const pour=(1-Math.cos(t*2.2))*.5;a.armL.rotation.x=-1.45+Math.sin(f)*.04;a.root.position.copy(a.base);a.head.rotation.x=.18+pour*.06;a.kettle!.rotation.z=order>0?.18+pour*.3:.03+Math.sin(f*.7)*.025;const hand=V(.025,-.34,.025),reach=V(.24,.16,0).multiplyScalar(.68).applyEuler(a.kettle!.rotation).add(a.kettle!.position).sub(a.armR.position);a.armR.scale.setScalar(reach.length()/hand.length());a.armR.quaternion.setFromUnitVectors(hand.normalize(),reach.normalize())}
  else if(a.role==='server'){const service=sampleService(t),step=Math.sin(t*5.6)*service.walk;a.root.position.set(service.x,service.y+Math.abs(step)*.025,service.z);a.root.rotation.y=service.yaw;a.legL.rotation.x=step*.34;a.legR.rotation.x=-step*.34;a.armL.rotation.x=-1.5;a.armR.rotation.x=-1.5-(service.phase==='serve'?Math.sin(service.transfer*Math.PI)*.22:0);a.carry!.position.y=.84-Math.abs(step)*.025/1.16}
  else if(a.role==='watcher'){a.armL.rotation.x=-.15;a.armR.rotation.x=-.1;a.head.rotation.y=Math.sin(f*.35)*.4}

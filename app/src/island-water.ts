@@ -27,13 +27,16 @@ export function createIslandWater(scene:T.Scene,renderer:T.WebGLRenderer,u:Islan
  void main(){float depth=texture2D(depthMap,oceanUV).r*10.-2.+waterLevel-(${SEA_LEVEL});if(depth<.008)discard;
  vec2 p=waterWorld.xz;float eps=.06;vec2 warp=vec2(sin(p.y*.51+p.x*.07),cos(p.x*.34-p.y*.12))*.65;vec2 pn=p+warp;vec3 n=normalize(vec3((heightAt(pn-vec2(eps,0.))-heightAt(pn+vec2(eps,0.)))*.38,eps*2.,(heightAt(pn-vec2(0.,eps))-heightAt(pn+vec2(0.,eps)))*.38));
  float micro=sin(p.x*25.+p.y*12.+time*1.8)*.028*(1.+rain);n=normalize(n+vec3(micro,0.,-micro*.7));
- vec3 shallow=linearColor(vec3(.663,.788,.769)),deep=linearColor(vec3(.306,.478,.612));vec3 col=mix(shallow,deep,smoothstep(.2,5.,depth));col=mix(col,linearColor(vec3(.557,.620,.612)),snow*.9);col=mix(col,linearColor(vec3(.37,.48,.51)),rain*.38);col*=1.-dusk*.25*(1.-snow);
+ vec3 shallow=linearColor(vec3(.663,.788,.769)),deep=linearColor(vec3(.306,.478,.612));vec3 col=mix(shallow,deep,smoothstep(.2,5.,depth));col=mix(col,linearColor(vec3(.557,.620,.612)),snow*.9);col=mix(col,linearColor(vec3(.37,.48,.51)),rain*.38);float sunset=dusk*(1.-rain)*(1.-snow);col=mix(col,linearColor(vec3(.65,.57,.61)),sunset*.36);
  vec4 clip=viewProjection*vec4(waterWorld,1.);vec2 screen=clip.xy/clip.w*.5+.5;vec2 refractUV=clamp(screen+n.xz*.0035*min(depth,2.),vec2(.001),vec2(.999));vec3 bottom=texture2D(sceneColor,refractUV).rgb;
  col=mix(col,bottom,(1.-smoothstep(0.,2.,depth))*.48*captureReady);
  vec3 eye=normalize(cameraPosition-waterWorld),direction=reflect(-eye,n);float fresnel=.025+.14*pow(1.-max(dot(eye,n),0.),3.);vec3 reflected=linearColor(mix(vec3(.84,.88,.87),vec3(.68,.77,.82),max(direction.y,0.)));
  if(desktop>.5&&captureReady>.5){for(int i=0;i<22;i++){float distance=.35+float(i)*1.14;vec3 ray=waterWorld+direction*distance;vec4 c=viewProjection*vec4(ray,1.);vec2 uv=c.xy/c.w*.5+.5;if(uv.x<.005||uv.x>.995||uv.y<.005||uv.y>.995)break;float sampled=texture2D(sceneDepth,uv).r;float actual=viewDepth(uv,sampled);float castDepth=-(viewMatrix*vec4(ray,1.)).z;float difference=castDepth-actual;if(difference>0.&&difference<.55&&sampled<.9999){reflected=texture2D(sceneColor,uv).rgb;break;}}}
  else if(captureReady>.5){vec4 pc=probeMatrix*vec4(waterWorld,1.);vec2 uv=pc.xy/pc.w*.5+.5;reflected=texture2D(reflectionMap,clamp(uv+n.xz*.005,vec2(.005),vec2(.995))).rgb;}
  col=mix(col,reflected,fresnel);
+ // Wide broken warm reflection, locked to world coordinates and existing waves.
+ float eveningPath=exp(-pow((p.x*.55-p.y*.31-2.)/18.,2.));float eveningRipple=.65+.35*noise(p*vec2(.18,1.7)+n.xz*2.);
+ col=mix(col,linearColor(vec3(.88,.69,.57)),sunset*eveningPath*eveningRipple*.38);
  // Four depth-following, interrupted swash lines. No particle foam.
  float bands=0.;for(int i=0;i<4;i++){float level=.055+float(i)*.16+.025*sin(time*.75+float(i));float width=.016+.006*float(i);bands=max(bands,(1.-smoothstep(width,width+.025,abs(depth-level)))*smoothstep(.26,.65,noise(p*.8+time*.04)));}vec3 foam=linearColor(mix(vec3(.94,.94,.89),vec3(.80,.83,.80),rain));col=mix(col,foam,bands*foamDensity*.65);
  // Rain splashes and expanding concentric rings on the actual water surface.

@@ -1,17 +1,20 @@
-// Indoor piano and weather-specific outdoor ambience share mute/volume.
+// Weather tracks share the existing mute, volume and browser gesture policy.
 export class CafeMusic {
  audio=new Audio(new URL('music/afternoon-piano.m4a',document.baseURI).href);
+ jazz=new Audio(new URL('music/rain-jazz.m4a',document.baseURI).href);
+ sea=new Audio(new URL('music/sun-coast.m4a',document.baseURI).href);
  enabled=true;volume=.35;status='轻触庭院，听一会儿风';
  private context?:AudioContext;private wind?:GainNode;private rain?:GainNode;private entering=false;
- get name(){return this.inside()?'温室午后 · 古典风轻钢琴':this.raining()?'雨落庭院 · 自然雨声':'庭院微风 · 风声白噪音'}
- constructor(private inside:()=>boolean,private raining:()=>boolean,private changed:()=>void){
-  this.audio.loop=true;this.audio.preload='auto';
+ get name(){return this.inside()?this.raining()?'雨中小馆 · 轻爵士':'温室午后 · 古典风轻钢琴':this.raining()?'雨落庭院 · 自然雨声':this.sunny()?'海岛晴日 · 海浪与海鸥':'庭院微风 · 风声白噪音'}
+ private get track(){return this.inside()||this.entering?this.raining()?this.jazz:this.audio:this.sunny()?this.sea:null}
+ constructor(private inside:()=>boolean,private raining:()=>boolean,private changed:()=>void,private sunny:()=>boolean=()=>!raining()){
+  for(const a of [this.audio,this.jazz,this.sea]){a.loop=true;a.preload='auto'}
   try{const v=Number(localStorage.getItem('cafe-volume')??.35);this.volume=Number.isFinite(v)?Math.max(0,Math.min(1,v)):.35;this.enabled=localStorage.getItem('cafe-built-in-music-enabled')!=='false'}catch{}
-  this.audio.volume=this.volume;
-  this.audio.addEventListener('error',()=>{this.status='配乐暂时未能加载，点击音乐按钮重试';this.changed()});
+  for(const a of [this.audio,this.jazz,this.sea])a.volume=this.volume;
+  for(const a of [this.audio,this.jazz,this.sea])a.addEventListener('error',()=>{if(a===this.track){this.status='配乐暂时未能加载，点击音乐按钮重试';this.changed()}});
   document.addEventListener('visibilitychange',()=>this.sync());
   // Browsers require a player gesture before sound can start.
-  const unlock=(e:Event)=>{if(!this.enabled||(e.target instanceof Element&&e.target.closest('#sound')))return;this.unlockWind();if(this.inside()&&this.audio.paused)this.play()};
+  const unlock=(e:Event)=>{if(!this.enabled||(e.target instanceof Element&&e.target.closest('#sound')))return;this.unlockWind();this.play()};
   document.addEventListener('pointerdown',unlock,{passive:true});document.addEventListener('keydown',unlock);
  }
  private unlockWind(){
@@ -42,18 +45,20 @@ export class CafeMusic {
  }
  private syncWind(){
   const active=this.enabled&&!document.hidden&&!this.inside()&&!this.entering;
-  if(this.context&&this.wind)this.wind.gain.setTargetAtTime(active&&!this.raining()?this.volume*.65:0,this.context.currentTime,.15);
+  if(this.context&&this.wind)this.wind.gain.setTargetAtTime(active&&!this.raining()&&!this.sunny()?this.volume*.65:0,this.context.currentTime,.15);
   if(this.context&&this.rain)this.rain.gain.setTargetAtTime(active&&this.raining()?this.volume*.7:0,this.context.currentTime,.15);
-  if(!this.inside()&&!this.entering)this.status=!this.enabled?'声音已暂停':this.context?.state==='running'?(this.raining()?'正在庭院播放雨声':'正在庭院播放风声'):(this.raining()?'轻触庭院，听一会儿雨':'轻触庭院，听一会儿风');
+  if(!this.inside()&&!this.entering)this.status=!this.enabled?'声音已暂停':this.context?.state==='running'?(this.raining()?'正在庭院播放雨声':this.sunny()?'正在庭院播放海浪与海鸥':'正在庭院播放风声'):(this.raining()?'轻触庭院，听一会儿雨':'轻触庭院，听一会儿风');
   this.changed();
  }
  private play(){
-  if(!this.enabled||document.hidden)return;
-  this.audio.play().then(()=>{if(!this.enabled||document.hidden||(!this.inside()&&!this.entering)){this.audio.pause();return}this.status='正在馆内播放';this.changed()}).catch(()=>{this.status='点击右上角音乐按钮开始播放';this.changed()});
+  const track=this.track;
+  for(const a of [this.audio,this.jazz,this.sea])if(a!==track||!this.enabled||document.hidden)a.pause();
+  if(!track||!this.enabled||document.hidden)return;
+  track.play().then(()=>{if(track!==this.track||!this.enabled||document.hidden){track.pause();return}this.status=this.inside()||this.entering?'正在馆内播放':'正在庭院播放海浪与海鸥';this.changed()}).catch(()=>{if(track===this.track){this.status='点击右上角音乐按钮开始播放';this.changed()}});
  }
  enter(){this.entering=true;this.syncWind();this.play()}
- sync(){this.entering=false;this.syncWind();if(this.inside()&&this.enabled&&!document.hidden)this.play();else{this.audio.pause();if(!this.enabled)this.status='声音已暂停';this.changed()}}
+ sync(){this.entering=false;this.syncWind();this.play();if(!this.enabled)this.status='声音已暂停';this.changed()}
  toggle(){this.enabled=this.enabled&&!this.snapshot().playing?true:!this.enabled;try{localStorage.setItem('cafe-built-in-music-enabled',String(this.enabled))}catch{}if(this.enabled)this.unlockWind();this.sync();return this.enabled}
- setVolume(v:number){if(!Number.isFinite(v))return;this.volume=Math.max(0,Math.min(1,v));this.audio.volume=this.volume;this.syncWind();try{localStorage.setItem('cafe-volume',String(this.volume))}catch{}}
- snapshot(){const outdoors=this.enabled&&!document.hidden&&!this.inside()&&!this.entering&&this.context?.state==='running';const windPlaying=!!outdoors&&!this.raining(),rainPlaying=!!outdoors&&this.raining();return {name:this.name,enabled:this.enabled,volume:this.volume,playing:this.inside()?!this.audio.paused:!!outdoors,pianoPlaying:!this.audio.paused,windPlaying,rainPlaying,rainGain:this.rain?.gain.value??0,windGain:this.wind?.gain.value??0,time:this.audio.currentTime,status:this.status,builtIn:true,readyState:this.audio.readyState}}
+ setVolume(v:number){if(!Number.isFinite(v))return;this.volume=Math.max(0,Math.min(1,v));for(const a of [this.audio,this.jazz,this.sea])a.volume=this.volume;this.syncWind();try{localStorage.setItem('cafe-volume',String(this.volume))}catch{}}
+ snapshot(){const outdoors=this.enabled&&!document.hidden&&!this.inside()&&!this.entering&&this.context?.state==='running';const windPlaying=!!outdoors&&!this.raining()&&!this.sunny(),rainPlaying=!!outdoors&&this.raining();const track=this.track;return {name:this.name,enabled:this.enabled,volume:this.volume,playing:track?!track.paused:windPlaying||rainPlaying,pianoPlaying:!this.audio.paused,jazzPlaying:!this.jazz.paused,seaPlaying:!this.sea.paused,windPlaying,rainPlaying,rainGain:this.rain?.gain.value??0,windGain:this.wind?.gain.value??0,time:track?.currentTime??0,status:this.status,builtIn:true,readyState:track?.readyState??this.audio.readyState}}
 }

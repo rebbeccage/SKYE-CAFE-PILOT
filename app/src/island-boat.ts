@@ -1,14 +1,14 @@
 import * as T from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {V,group,mesh,box,ball,cyl,branch,consolidate} from './winter-geometry';
-import {boardwalkTopAtZ} from './island-props';
+import {boardwalkTopAtZ,BOARD_X,BOARD_LAYOUT} from './island-props';
 
 export type BoatState=0|1|2;
 export type BoatWeather='sun'|'rain'|'snow';
 export type BoatParameters={BoatState:BoatState;BoatPhase:number;VisitorCount:number};
-export const ISLAND_BOAT_ANCHOR=V(1.35,-1.63,30.8);
-const DOCK_LANDING=V(.55,-1.57,26.899752605542062);
-const DOCK_CENTER=V(-.65,-1.57,26.899752605542062);
+export const ISLAND_BOAT_ANCHOR=V(BOARD_X+2,-1.63,BOARD_LAYOUT.landingZ+3.900247394);
+const DOCK_LANDING=V(BOARD_X+1.2,BOARD_LAYOUT.landingTop+.055,BOARD_LAYOUT.landingZ);
+const DOCK_CENTER=V(BOARD_X,BOARD_LAYOUT.landingTop+.015,BOARD_LAYOUT.landingZ);
 const YAW=Math.PI/2+Math.PI/12;
 const ARRIVE=16,MOOR=30,DEPART=16,CYCLE=ARRIVE+MOOR+DEPART;
 const ease=(v:number)=>{const x=T.MathUtils.clamp(v,0,1);return x*x*(3-2*x)};
@@ -201,7 +201,7 @@ export function createIslandBoat(scene:T.Scene,surfaceAt:(x:number,z:number,t:nu
   lastTime=t;lastWeather=weather;const phase=cycleSeconds(t);parameters.BoatPhase=publishedPhase=phase/CYCLE;
   parameters.BoatState=publishedState=stateAt(phase);
   const arrivePhase=phase/ARRIVE,departPhase=(phase-ARRIVE-MOOR)/DEPART;
-  const along=parameters.BoatState===0?-33*(1-ease(arrivePhase)):parameters.BoatState===2?33*ease(departPhase):0;
+  const along=parameters.BoatState===0?-33*(1-ease(arrivePhase)):parameters.BoatState===2?-33*ease(departPhase):0;
   speed=parameters.BoatState===0?33*6*T.MathUtils.clamp(arrivePhase,0,1)*(1-T.MathUtils.clamp(arrivePhase,0,1))/ARRIVE:parameters.BoatState===2?33*6*departPhase*(1-departPhase)/DEPART:0;
   root.position.copy(anchor).addScaledVector(forward,along);
   // Two actual water samples drive pitch and roll; decorative bob is additional.
@@ -254,13 +254,13 @@ export function createIslandBoat(scene:T.Scene,surfaceAt:(x:number,z:number,t:nu
      for(const corner of shoeCorners){
       const world=corner.clone().applyMatrix4(v.feet[k].matrixWorld),onBridge=world.clone().applyMatrix4(gangwayInverse);
       if(Math.abs(onBridge.x)<.36&&Math.abs(onBridge.z)<gangwayLength/2+.20)lift=Math.max(lift,(.0605-onBridge.y)/Math.max(.5,bridgeUp.y));
-      if(world.x>=-1.85&&world.x<=DOCK_LANDING.x-.04&&world.z<=DOCK_LANDING.z+.02&&world.z>=DOCK_CENTER.z-1.4)lift=Math.max(lift,(boardwalkTopAtZ(world.z,weather)+.008-world.y)/Math.max(.5,legUp.y));
+      if(world.x>=BOARD_X-1.2&&world.x<=DOCK_LANDING.x-.04&&world.z<=DOCK_LANDING.z+.02&&world.z>=DOCK_CENTER.z-1.4)lift=Math.max(lift,(boardwalkTopAtZ(world.z,weather)+.008-world.y)/Math.max(.5,legUp.y));
      }
      v.legs[k].position.y+=Math.max(0,lift);
     }
    }
   }
-  wake.position.copy(root.position);wake.position.y=surfaceAt(root.position.x,root.position.z,t)+.015;wake.rotation.y=YAW;
+  wake.position.copy(root.position);wake.position.y=surfaceAt(root.position.x,root.position.z,t)+.015;const wakeYaw=parameters.BoatState===2?YAW+Math.PI:YAW;wake.rotation.y=wakeYaw;
   const power=parameters.BoatState===1?.10:T.MathUtils.clamp(speed/2,0,1);foamMat.opacity=.1+power*.23;
   for(let j=0;j<wakeStrips.length;j++){
    const p=(t*.25+(j%3)/3)%1;const strip=wakeStrips[j];strip.visible=parameters.BoatState!==1;strip.position.z=-p*.9;strip.scale.set(1+p*.14,1,1+p*.14);
@@ -268,7 +268,7 @@ export function createIslandBoat(scene:T.Scene,surfaceAt:(x:number,z:number,t:nu
     const rest=strip.userData.restPosition as Float32Array,positions=strip.geometry.attributes.position;
     for(let k=0;k<positions.count;k++){
      const lx=rest[k*3]*strip.scale.x,lz=rest[k*3+2]*strip.scale.z+strip.position.z;
-     const wx=wake.position.x+lx*Math.cos(YAW)+lz*Math.sin(YAW),wz=wake.position.z-lx*Math.sin(YAW)+lz*Math.cos(YAW);
+     const wx=wake.position.x+lx*Math.cos(wakeYaw)+lz*Math.sin(wakeYaw),wz=wake.position.z-lx*Math.sin(wakeYaw)+lz*Math.cos(wakeYaw);
      positions.setY(k,surfaceAt(wx,wz,t)-wake.position.y+.02+rest[k*3+1]);
     }
     positions.needsUpdate=true;

@@ -180,5 +180,5 @@ function build(a:Actor,kind:Kind){
 }
 export function createCharacterDetails(world:ReturnType<typeof buildWorld>){
  const ahe=build(world.actors[0],'ahe'),lin=build(world.actors[1],'lin');let lastTime=0;
- return {ahe,lin,conversation(name:string|null){ahe.conversation(name==='阿禾',lastTime);lin.conversation(name==='林伯',lastTime)},update(t:number,order:number){lastTime=t;ahe.update(t,order);lin.update(t,order)},diagnostics:()=>({ahe:ahe.diagnostics(),lin:lin.diagnostics()})};
+ return {ahe,lin,conversation(name:string|null){ahe.conversation(name==='阿禾',lastTime);lin.conversation(name==='林伯',lastTime)},update(t:number,order:number){lastTime=t;if(!world.actors[0].root.userData.suppliedAsset)ahe.update(t,order);lin.update(t,order)},diagnostics:()=>({ahe:ahe.diagnostics(),lin:lin.diagnostics()})};
 }

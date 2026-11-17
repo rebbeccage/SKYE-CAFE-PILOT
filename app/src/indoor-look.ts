@@ -7,7 +7,7 @@ export class IndoorLook {
  private pointers=new Map<number,T.Vector2>();
  constructor(private camera:T.PerspectiveCamera,canvas:HTMLCanvasElement){
   canvas.addEventListener('pointerdown',e=>{if(!this.enabled||e.button!==0)return;this.pointers.set(e.pointerId,new T.Vector2(e.clientX,e.clientY));canvas.setPointerCapture(e.pointerId)});
-  canvas.addEventListener('pointermove',e=>{const p=this.pointers.get(e.pointerId);if(!p)return;if(this.enabled&&this.pointers.size===1){this.yawGoal-=(e.clientX-p.x)*.004;this.pitchGoal=T.MathUtils.clamp(this.pitchGoal+(e.clientY-p.y)*.003,-Math.PI/3,Math.PI/3)}p.set(e.clientX,e.clientY)});
+  canvas.addEventListener('pointermove',e=>{const p=this.pointers.get(e.pointerId);if(!p)return;if(this.enabled&&this.pointers.size===1){this.yawGoal+=(e.clientX-p.x)*.004;this.pitchGoal=T.MathUtils.clamp(this.pitchGoal-(e.clientY-p.y)*.003,-Math.PI/3,Math.PI/3)}p.set(e.clientX,e.clientY)});
   for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,e=>this.pointers.delete((e as PointerEvent).pointerId));
   this.stand();
  }
@@ -22,6 +22,11 @@ export class IndoorLook {
   this.yaw=this.yawGoal=Math.atan2(focus.x,focus.z);this.pitch=this.pitchGoal=Math.atan2(focus.y,Math.hypot(focus.x,focus.z));
   // Wide doorway overview includes the near table's feet and the full counter.
   this.camera.zoom=seated?1:.50;this.camera.updateProjectionMatrix();this.update();
+ }
+ freeze(){this.yawGoal=this.yaw;this.pitchGoal=this.pitch;this.pointers.clear()}
+ lookFrom(eye:T.Vector3,focus:T.Vector3){
+  this.seated=true;this.seatIndex=-1;this.pointers.clear();this.eye.copy(eye);const d=focus.clone().sub(eye);
+  this.yaw=this.yawGoal=Math.atan2(d.x,d.z);this.pitch=this.pitchGoal=Math.atan2(d.y,Math.hypot(d.x,d.z));this.camera.zoom=1;this.camera.updateProjectionMatrix();this.update();
  }
  stand(){this.place(false)}
  sit(index=0){this.place(true,Math.max(0,Math.min(2,index)))}

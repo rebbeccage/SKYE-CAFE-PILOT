@@ -1,23 +1,23 @@
 import * as T from 'three';
+import {gardenPaths,gardenPathDistance} from './garden-path';
 
 // Garden-local coordinates. The existing slab/collider and every prop stay fixed.
 export const lawnParameters={GrassHeight:.7,WindSpeed:.35,WindDirection:90 as const,Dryness:.12,WearMask:1,TrifoilDensity:.5};
 const X0=-1.35,X1=8.35,Z0=5.53,Z1=9.5;
 const patches=[[1.87,7.72,.25,.18],[1.3,7.5,.22,.2],[2.5,7.22,.18,.15],[3.02,7.05,.36,.25],[6.55,5.95,.58,.23],[1.5,9.13,.58,.23],[-.1,6.2,.24,.22],[3,8.65,.24,.22],[3.1,5.95,.24,.22],[5.75,6.65,.19,.19],[-.95,7.6,.25,.25]];
-const path=new T.CatmullRomCurve3([new T.Vector3(1.25,0,9.5),new T.Vector3(.95,0,8.65),new T.Vector3(1.25,0,8.05),new T.Vector3(2.55,0,7.45),new T.Vector3(3.02,0,7.05)]).getPoints(80);
-const footprints=path.filter((_,i)=>i%7===0).map((p,i)=>[p.x+(i%2?.08:-.08),p.z]);
+const footprints=gardenPaths.flatMap(path=>path.filter((_,i)=>i%2===0).map(([x,z],i)=>[x+(i%2?.08:-.08),z]));
 const roots=[[-.1,6.2],[3,8.65],[3.1,5.95]];
 const smooth=(a:number,b:number,x:number)=>T.MathUtils.smoothstep(x,a,b);
 const noise=(x:number,z:number)=>Math.sin(x*2.8+Math.cos(z*1.9))*.25+Math.sin(z*5.7+x*.9)*.14+Math.cos(x*12.7-z*9.1)*.07;
-const height=(x:number,z:number)=>.254+noise(x,z)*.027;
+export const gardenGroundHeight=(x:number,z:number)=>.254+noise(x,z)*.027;
 function masks(x:number,z:number){
- let d=10;for(const p of path)d=Math.min(d,Math.hypot(x-p.x,z-p.z));
- const wear=1-smooth(.09,.3,d);let bare=0;
+ const d=gardenPathDistance(x,z);
+ const wear=1-smooth(.20,.48,d);let bare=0;
  for(const [px,pz,rx,rz] of patches)bare=Math.max(bare,1-smooth(.55,1.15,Math.hypot((x-px)/rx,(z-pz)/rz)));
  const edge=Math.min(x-X0,X1-x,z-Z0,Z1-z);const border=1-smooth(.035,.15+noise(x,z)*.07,edge);
  let foot=0;for(const [fx,fz] of footprints)foot=Math.max(foot,1-smooth(.5,1,Math.hypot((x-fx)/.055,(z-fz)/.12)));
  let mound=0;for(const [rx,rz] of roots)mound=Math.max(mound,1-smooth(.08,.4,Math.hypot(x-rx,z-rz)));
- const ridge=(1-smooth(.2,.29,d))*smooth(.12,.2,d);
+ const ridge=(1-smooth(.39,.49,d))*smooth(.30,.39,d);
  return {wear,bare,border,foot,mound,ridge};
 }
 export function createGardenLawn(parent:T.Object3D){
@@ -50,7 +50,7 @@ export function createGardenLawn(parent:T.Object3D){
    float grit=fract(sin(dot(vLawnPosition.xz,vec2(129.81,243.73)))*43758.54);
    float lum=dot(diffuseColor.rgb,vec3(.2126,.7152,.0722));
    diffuseColor.rgb=mix(diffuseColor.rgb,vec3(lum),uRain*.35)*(1.-uRain*.12);
-   ${ground?`diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.29,.27,.18),worn*.6);
+   ${ground?`diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.41,.43,.30),worn*.32);
    diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.147,.102,.068)*(1.-uRain*.3),soil*.82);
    vec3 snowCol=mix(vec3(.552,.624,.597),vec3(.738,.768,.753),mask.b);
    float cover=(.58+grit*.19)*(1.-worn*.47)*(1.-soil*.32);
@@ -65,7 +65,7 @@ export function createGardenLawn(parent:T.Object3D){
  shade(groundMat,true);shade(grassMat,false);
  const groundGeo=new T.PlaneGeometry(X1-X0,Z1-Z0,160,68);groundGeo.rotateX(-Math.PI/2);groundGeo.translate((X0+X1)/2,0,(Z0+Z1)/2);
  const pos=groundGeo.attributes.position,colors=[],meta=[];
- for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i),n=noise(x,z);pos.setY(i,height(x,z));const c=mid.clone().lerp(n<0?dark:tip,Math.abs(n)*1.5).multiplyScalar(.48);colors.push(c.r,c.g,c.b);const m=masks(x,z);meta.push(0,0,m.mound,m.ridge-m.foot*.4-m.bare*.45);}
+ for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i),n=noise(x,z);pos.setY(i,gardenGroundHeight(x,z));const c=mid.clone().lerp(n<0?dark:tip,Math.abs(n)*1.5).multiplyScalar(.48);colors.push(c.r,c.g,c.b);const m=masks(x,z);meta.push(0,0,m.mound,m.ridge-m.foot*.4-m.bare*.45);}
  groundGeo.setAttribute('color',new T.Float32BufferAttribute(colors,3));groundGeo.setAttribute('lawnData',new T.Float32BufferAttribute(meta,4));groundGeo.computeVertexNormals();
  const turf=new T.Mesh(groundGeo,groundMat);turf.name='Continuous turf inside stone coping';turf.receiveShadow=true;root.add(turf);
  // Real tapered blades, not alpha billboards. One merged draw, opaque depth-tested
@@ -80,7 +80,7 @@ export function createGardenLawn(parent:T.Object3D){
  for(let i=0;i<count;i++){
   const x=X0+.03+rnd()*(X1-X0-.06),z=Z0+.03+rnd()*(Z1-Z0-.06),m=masks(x,z);
   if(rnd()<Math.max(m.bare*.95,m.border*.92,m.wear*.8))continue;
-  const y=height(x,z),h=(.04+rnd()*.03)*(1-m.wear*.65),a=rnd()*Math.PI*2,w=.005+rnd()*.008,dx=Math.cos(a)*w,dz=Math.sin(a)*w;
+  const y=gardenGroundHeight(x,z),h=(.04+rnd()*.03)*(1-m.wear*.65),a=rnd()*Math.PI*2,w=.005+rnd()*.008,dx=Math.cos(a)*w,dz=Math.sin(a)*w;
   const c=(rnd()<.08?dry:rnd()<.22?dark:mid).clone().multiplyScalar(.52);const base=c.clone().multiplyScalar(.8),top=c.clone().lerp(tip.clone().multiplyScalar(.52),.2+rnd()*.2);
   tri([x-dx,y,z-dz],[x+dx,y,z+dz],[x+.014+dx*.55,y+h*.6,z+.014+dz*.55],base,[0,0,.6]);
   tri([x-dx,y,z-dz],[x+.014+dx*.55,y+h*.6,z+.014+dz*.55],[x+.014-dx*.55,y+h*.6,z+.014-dz*.55],c,[0,.6,.6]);
@@ -91,7 +91,7 @@ export function createGardenLawn(parent:T.Object3D){
  for(let i=0;i<135;i++){
   const p=patches[i%patches.length],a=rnd()*Math.PI*2,x=p[0]+Math.cos(a)*p[2]*(.85+rnd()*.5),z=p[1]+Math.sin(a)*p[3]*(.85+rnd()*.5);
   if(x<X0+.08||x>X1-.08||z<Z0+.08||z>Z1-.08)continue;
-  const y=height(x,z),h=.12+rnd()*.06,c=i%3===0?dry:dark;
+  const y=gardenGroundHeight(x,z),h=.12+rnd()*.06,c=i%3===0?dry:dark;
   tri([x-.003,y,z],[x+.003,y,z],[x+.024,y+h,z-.018],c,[0,0,1],2);bead(x+.024,y+h,z-.018,.005);tallStems++;
   if(i%2===0){for(let j=0;j<3;j++){const a=j*2.094,xx=x+Math.cos(a)*.021,zz=z+Math.sin(a)*.021;tri([x,y+.025,z],[xx-Math.sin(a)*.016,y+.032,zz+Math.cos(a)*.016],[xx+Math.cos(a)*.017,y+.027,zz+Math.sin(a)*.017],mid,[.2,.3,.3],3,i/135);tri([x,y+.025,z],[xx+Math.cos(a)*.017,y+.027,zz+Math.sin(a)*.017],[xx+Math.sin(a)*.016,y+.032,zz-Math.cos(a)*.016],mid,[.2,.3,.3],3,i/135)}clovers++;}
   if(i%29===0)for(let j=0;j<7;j++){const a=j*.897;tri([x+.024,y+h,z-.018],[x+.024+Math.cos(a)*.015,y+h+.004,z-.018+Math.sin(a)*.015],[x+.024+Math.cos(a+.8)*.015,y+h+.004,z-.018+Math.sin(a+.8)*.015],dry,[1,1,1],2)}
@@ -103,7 +103,7 @@ export function createGardenLawn(parent:T.Object3D){
   tri([X0-.09,.23,z+.06],[X0-.083,.23,z+.064],[X0-.105,.205,z+.08],dark,[0,0,0],2);
  }
  for(let i=0;i<65;i++){
-  const x=X0+.02+rnd()*(X1-X0-.04),z=i%2?Z0+.035+rnd()*.055:Z1-.035-rnd()*.055,y=height(x,z)+.003,a=rnd()*6.28;
+  const x=X0+.02+rnd()*(X1-X0-.04),z=i%2?Z0+.035+rnd()*.055:Z1-.035-rnd()*.055,y=gardenGroundHeight(x,z)+.003,a=rnd()*6.28;
   const c=i%3?earth:dry.clone().multiplyScalar(.5),dx=Math.cos(a)*.035,dz=Math.sin(a)*.035;
   tri([x-dx,y,z-dz],[x-dz*.2,y+.002,z+dx*.2],[x+dx,y,z+dz],c,[0,0,0],4);
   tri([x-dx,y,z-dz],[x+dx,y,z+dz],[x+dz*.2,y+.002,z-dx*.2],c,[0,0,0],4);

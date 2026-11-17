@@ -5,7 +5,7 @@ import {V,material,group,mesh,box,ball,branch,consolidate} from './winter-geomet
 // Keep them clear of Tang, the cat and the existing worktable/worn grass path.
 export function createGardenFruit(parent:T.Group){
  const root=group(parent);root.name='Seasonal strawberry runners and grape vines';
- const structure=group(root),grapeLeaves=group(root),berries=group(root),strawberryLeaves=group(root),winter=group(root);
+ const structure=group(root),grapeLeaves=group(root),grapeFruit=group(root),strawberryFruit=group(root),flowers=group(root),strawberryLeaves=group(root),winter=group(root);
  const wood=material(0xb9a07b),bark=material(0x75654f),green=material(0x94a47c,.82),underside=material(0xb3bd9d,.85),vein=material(0xc4c8a8),red=material(0xb76d59,.58),seed=material(0xd6b88a),purple=material(0x82718c,.5),bloom=material(0xaba0af,.7),cream=material(0xe9e6d6),frost=material(0xdde3e2,.94);
  const stems=new T.CatmullRomCurve3([V(5.1,.27,5.95),V(5.18,.76,5.95),V(5.58,1.3,5.95),V(6.35,1.44,5.96),V(7.1,1.36,5.93),V(7.7,1.52,5.95)]);
  const tube=(p:T.Object3D,points:T.Vector3[],r:number,m:T.Material)=>mesh(p,new T.TubeGeometry(new T.CatmullRomCurve3(points),24,r,5,false),m);
@@ -26,7 +26,7 @@ export function createGardenFruit(parent:T.Group){
   const p=stems.getPoint((i+.5)/15),side=i%2?1:-1,end=p.clone().add(V(side*.11,.11,side*.21));
   branch(structure,p,end,.006,bark,.002);leaf(grapeLeaves,end,.15+(i%3)*.018,i*.85,true);
   if(i%2===0){const a=p.clone().add(V(.02,-.09,-.065));bunches.push(a);branch(structure,p,a,.004,bark,.002);
-   for(let row=0;row<4;row++)for(let k=0;k<4-row;k++){const r=.044;const b=ball(berries,r,a.x+(k-(3-row)/2)*.068,a.y-row*.061,a.z+Math.sin(k*2.4+row)*.025,purple);b.scale.y=1.12;if(k===0)ball(berries,.012,b.position.x-.018,b.position.y+.022,b.position.z+.032,bloom)}
+   for(let row=0;row<4;row++)for(let k=0;k<4-row;k++){const r=.044;const b=ball(grapeFruit,r,a.x+(k-(3-row)/2)*.068,a.y-row*.061,a.z+Math.sin(k*2.4+row)*.025,purple);b.scale.y=1.12;if(k===0)ball(grapeFruit,.012,b.position.x-.018,b.position.y+.022,b.position.z+.032,bloom)}
   }
   if(i%3===0){const end=p.clone().add(V(.12,.16,.08));const pts=Array.from({length:18},(_,j)=>end.clone().add(V(Math.cos(j*.4)*(.03-j*.001),j*.004,Math.sin(j*.4)*.03)));tube(structure,[p,...pts],.0025,bark)}
  }
@@ -42,14 +42,20 @@ export function createGardenFruit(parent:T.Group){
   const base=V(x,.29,z);
   for(let i=0;i<5;i++){const angle=i*1.26+index,tip=base.clone().add(V(Math.cos(angle)*.17,.055+Math.sin(i)*.012,Math.sin(angle)*.14));branch(structure,base,tip,.003,bark,.0015);
    for(let k=0;k<3;k++){const a=angle+(k-1)*.62,at=tip.clone().add(V(Math.cos(a)*.065,0,Math.sin(a)*.065));leaf(strawberryLeaves,at,.073,a);const snow=ball(winter,.025,at.x,at.y+.01,at.z,frost);snow.scale.set(1,.25,.8)}
-   if(i%2===0){const at=tip.clone().add(V(.02,-.02,.035));strawberry(berries,at,.95)}
+   if(i%2===0){const at=tip.clone().add(V(.02,-.02,.035));strawberry(strawberryFruit,at,.95)}
   }
   // Low runners connect the clumps without any new paving or bed boundary.
   tube(structure,[base,base.clone().add(V(.17,-.005,.18)),base.clone().add(V(.35,.005,.13))],.003,bark);
-  const center=base.clone().add(V(-.06,.12,0));ball(berries,.011,center.x,center.y,center.z,seed);for(let k=0;k<5;k++){const a=k*1.256;const f=ball(berries,.016,center.x+Math.cos(a)*.016,center.y,center.z+Math.sin(a)*.016,cream);f.scale.y=.25}
+  const center=base.clone().add(V(-.06,.12,0));ball(flowers,.011,center.x,center.y,center.z,seed);for(let k=0;k<5;k++){const a=k*1.256;const f=ball(flowers,.016,center.x+Math.cos(a)*.016,center.y,center.z+Math.sin(a)*.016,cream);f.scale.y=.25}
  }
- const fallen=[V(4.9,.344,6.85),V(5.63,.343,7.38),V(6.77,.342,8.12)];for(const [i,p] of fallen.entries()){strawberry(berries,p,.85);for(let j=0;j<2;j++)ball(berries,.032,p.x+.15+j*.06,.33,p.z+.08-i*.03,purple)}
- for(const g of [structure,grapeLeaves,berries,strawberryLeaves,winter]){consolidate(g);g.traverse(o=>{if(o instanceof T.Mesh)o.castShadow=true})}
+ const fallen=[V(4.9,.344,6.85),V(5.63,.343,7.38),V(6.77,.342,8.12)];for(const [i,p] of fallen.entries()){strawberry(strawberryFruit,p,.85);for(let j=0;j<2;j++)ball(grapeFruit,.032,p.x+.15+j*.06,.33,p.z+.08-i*.03,purple)}
+ for(const g of [structure,grapeLeaves,grapeFruit,strawberryFruit,flowers,strawberryLeaves,winter]){consolidate(g);g.traverse(o=>{if(o instanceof T.Mesh)o.castShadow=true})}
+ const hotspots=[{id:'crop-grape',label:'葡萄 · 花园',at:V(6.4,.95,5.95),size:V(2.8,1.3,.65)},{id:'crop-strawberry',label:'草莓 · 花园',at:V(5.9,.38,7.4),size:V(3,.4,1.8)}].map(h=>{
+  const hit=mesh(root,new T.BoxGeometry(h.size.x,h.size.y,h.size.z),new T.MeshBasicMaterial({visible:false}),h.at.x,h.at.y,h.at.z);hit.userData.hit=h.id;
+  return {id:h.id,label:h.label,mesh:hit,point:V(0,0,0)};
+ });
  let state='sun';winter.visible=false;
- return {update(snow:boolean,rain:boolean){const next=snow?'snow':rain?'rain':'sun';if(next===state)return;state=next;grapeLeaves.visible=berries.visible=!snow;winter.visible=snow;green.color.setHex(snow?0x8e9680:rain?0x839077:0x94a47c);green.roughness=rain?.63:.82;},diagnostics:()=>({weather:state,strawberryPlants:plants.length,grapeBunches:bunches.length,fallenStrawberries:fallen.length,fallenGrapes:fallen.length*2,ripeFruitVisible:berries.visible,winterDormant:!grapeLeaves.visible,localBounds:{x:[4.2,7.95],z:[5.5,8.2]}})};
+ let cultivation={cultivationEnabled:false,grapeRipe:false,strawberryRipe:false};
+ function sync(){const snow=state==='snow';grapeLeaves.visible=flowers.visible=!snow;grapeFruit.visible=!snow&&(!cultivation.cultivationEnabled||cultivation.grapeRipe);strawberryFruit.visible=!snow&&(!cultivation.cultivationEnabled||cultivation.strawberryRipe);winter.visible=snow}
+ return {hotspots,setCultivation(value:typeof cultivation){cultivation={...value};sync()},update(snow:boolean,rain:boolean){const next=snow?'snow':rain?'rain':'sun';if(next===state)return;state=next;sync();green.color.setHex(snow?0x8e9680:rain?0x839077:0x94a47c);green.roughness=rain?.63:.82;},diagnostics:()=>({weather:state,strawberryPlants:plants.length,grapeBunches:bunches.length,fallenStrawberries:fallen.length,fallenGrapes:fallen.length*2,ripeFruitVisible:grapeFruit.visible||strawberryFruit.visible,grapeRipeVisible:grapeFruit.visible,strawberryRipeVisible:strawberryFruit.visible,cultivationEnabled:cultivation.cultivationEnabled,winterDormant:!grapeLeaves.visible,localBounds:{x:[4.2,7.95],z:[5.5,8.2]}})};
 }

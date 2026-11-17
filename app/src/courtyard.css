@@ -26,3 +26,6 @@
  #toast{bottom:76px}
  .game-nav,.scene-interior .game-nav{bottom:calc(12px + env(safe-area-inset-bottom))}
 }
+
+/* Both cameras use the full browser viewport, including desktop and landscape. */
+#app,.scene-interior #app{position:fixed;inset:0;width:100%;height:100dvh;transform:none}

@@ -35,7 +35,7 @@ export function createSnow(scene:T.Scene,world:ReturnType<typeof buildWorld>){
  field(-4.62,5.53,-4.42,5.32,.14,()=>.247,(x,z)=>{const lee=T.MathUtils.smoothstep(x,3.7,5.3);return (.06+.02*(.5+.5*Math.sin(x*1.2+z*1.8)))*(1+1.3*lee)-patioFootDepth(x,z)},(x,z)=>!(Math.abs(x)<2.94&&z> -2.95&&z<2.33)&&!track(x,z)&&!patioTrampled(x,z));
  // Compressed wet footfalls at staggered intervals, two trails merging at the door.
  for(const path of [-1,1])for(let i=0;i<15;i++){const u=i/14,z=2.4+u*2.8,x=-1.08+(path<0?-1.7:4)*u+(i%2?.065:-.065);if(z<3.45)continue;const p=mesh(accumulation,new T.CircleGeometry(.065,12),wet,x,.251,z);p.rotation.x=-Math.PI/2;p.rotation.z=path<0?-.55:.65;p.scale.y=1.7}
- for(let i=0;i<4;i++)for(const x of [-1.4,-.4,.06]){box(accumulation,x===-.4?.38:.13,.04,1.35-i*.22,x,.397+i*.15,2.75-i*.2,snow)}
+ for(const [z,top,depth] of [[2.875,.70,.35],[2.40,.85,.60]])for(const x of [-1.4,-.4,.06]){box(accumulation,x===-.4?.38:.13,.04,depth-.025,x,top+.02,z,snow)}
  for(const p of world.snowSurfaces.pots){const shape=new T.Shape();shape.absarc(0,0,p.radius+.012,0,Math.PI*2,false);const hole=new T.Path();hole.absarc(0,0,p.radius-.032,0,Math.PI*2,true);shape.holes.push(hole);const m=mesh(accumulation,new T.ExtrudeGeometry(shape,{depth:.04,bevelEnabled:false,steps:1}),snow,...p.position as [number,number,number]);m.rotation.x=-Math.PI/2}
  let icicles=0;for(const x of [-2.82,2.82])for(let z=-2.75;z<2.2;z+=1.2){const h=.08+.07*(.5+.5*Math.sin(z*13+x));cyl(accumulation,.014,.001,h,x,3.16-h/2,z,ice);icicles++}
  // Microscopic frost lines only on pane edges: zero volumetric build-up on vertical glazing.

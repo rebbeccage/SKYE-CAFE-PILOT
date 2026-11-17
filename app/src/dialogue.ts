@@ -1,6 +1,6 @@
 import './dialogue.css';
 
-type DialogueOptions={name:string,portrait:number,chapters:number,paragraphs:string[],reply:string,onReply:()=>void,onBack:()=>void};
+type DialogueOptions={portraitUrl?:string;standalone?:boolean;name:string,portrait:number,chapters:number,paragraphs:string[],reply:string,onReply:()=>void,onBack:()=>void};
 // Presentation only: story gates, rewards and persistence remain owned by game.ts.
 export function createDialogue(dialog:HTMLDialogElement,content:Element,close:()=>void){
  let options:DialogueOptions|null=null,pages:string[][]=[],page=0,auto=false,timer:number|undefined,committed=false;
@@ -36,14 +36,10 @@ export function createDialogue(dialog:HTMLDialogElement,content:Element,close:()
  const observer=new ResizeObserver(()=>{if(options)paginate()});
  function show(o:DialogueOptions){
   cleanup();window.dispatchEvent(new CustomEvent('cafe-conversation-visual',{detail:{name:o.name}}));options=o;page=0;committed=false;dialog.classList.add('dialogue-mode');document.body.classList.add('dialogue-open');dialog.setAttribute('aria-label',`与${o.name}交谈`);
-  const filled=Math.min(4,o.chapters+1);
-  content.innerHTML=`<div class="dialogue-stage">
-   <svg class="dialogue-filter" aria-hidden="true"><filter id="dialogue-ink"><feTurbulence type="fractalNoise" baseFrequency=".06" numOctaves="2" seed="8" result="grain"/><feDisplacementMap in="SourceGraphic" in2="grain" scale=".45" xChannelSelector="R" yChannelSelector="G"/></filter><filter id="dialogue-leaf-outline"><feMorphology in="SourceAlpha" operator="erode" radius=".65" result="inner"/><feComposite in="SourceGraphic" in2="inner" operator="out"/></filter></svg>
-   <aside class="dialogue-person" aria-label="${o.name}，已收藏 ${o.chapters} 段故事"><div class="dialogue-avatar"><span class="dialogue-art portrait-art" style="--portrait:${o.portrait}" role="img" aria-label="${o.name}的水粉头像"></span><div class="dialogue-vine" aria-hidden="true">${Array.from({length:5},(_,i)=>`<i class="vine-node ${i<filled?'grown':''}" style="--node:${i}">${i<filled?'<span class="painted-leaf"></span>':'<span class="bare-twig"></span>'}</i>`).join('')}</div></div><div class="affinity-leaves" aria-label="相知叶片 ${filled}/4">${Array.from({length:4},(_,i)=>`<span class="painted-leaf ${i<filled?'':'empty'}" style="--tilt:${i%2?4:-4}deg" aria-hidden="true"></span>`).join('')}</div></aside>
-   <nav class="dialogue-tools" aria-label="对话阅读控制"><button id="dialogue-skip" class="parchment-tab"><span>跳</span><span>过</span></button><button id="dialogue-auto" class="parchment-tab" aria-pressed="false"><i class="painted-leaf" aria-hidden="true"></i><span>自</span><span>动</span></button></nav>
-   <section class="dialogue-conversation" aria-label="对话"><div class="dialogue-name"><i class="jute-loop" aria-hidden="true"></i><i class="brass-nail" aria-hidden="true"></i><span>${o.name}</span></div><div class="dialogue-plate"><i class="fern-sprig fern-start" aria-hidden="true"></i><i class="fern-sprig fern-end" aria-hidden="true"></i><p id="dialogue-copy" tabindex="0" aria-live="polite" aria-atomic="true"></p><footer><small id="dialogue-page" aria-hidden="true"></small><button id="dialogue-next">轻点继续</button><button id="reply" hidden></button></footer></div></section>
-   <div class="dialogue-exit"><button id="back">返回人物手记</button><button id="dialogue-close">回到小店</button></div><span id="dialogue-status" class="dialogue-sr" role="status"></span>
-  </div>`;
+  content.innerHTML=`<div class="dialogue-stage"><section class="dialogue-conversation" aria-label="对话"><div class="dialogue-plate">
+   <header class="narrative-header"><aside class="dialogue-person"><div class="dialogue-avatar">${o.portraitUrl?`<img class="mona-portrait" src="${o.portraitUrl}" alt="${o.name}的水彩头像">`:`<span class="dialogue-art portrait-art" style="--portrait:${o.portrait}" role="img" aria-label="${o.name}的头像"></span>`}</div></aside><span class="dialogue-name">${o.name}</span><nav class="dialogue-tools" aria-label="对话阅读控制"><button id="dialogue-skip">跳过</button><button id="dialogue-auto" aria-pressed="false">自动</button><button id="dialogue-close" aria-label="关闭对话，回到小店">×</button></nav></header>
+   <p id="dialogue-copy" tabindex="0" aria-live="polite" aria-atomic="true"></p><footer><button id="back" aria-label="${o.standalone?'回到庭院':'返回人物手记'}">${o.standalone?'庭院':'手记'}</button><small id="dialogue-page" aria-hidden="true"></small><button id="dialogue-next">继续阅读 →</button><button id="reply" hidden></button></footer>
+   </div></section><span id="dialogue-status" class="dialogue-sr" role="status"></span></div>`;
   el('#dialogue-next').onclick=advance;el('#dialogue-copy').onclick=advance;
   el('#dialogue-skip').onclick=()=>{clearTimer();page=pages.length-1;paint()};
   el('#dialogue-auto').onclick=()=>{auto=!auto;paint();schedule()};

@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {createGardenLawn} from './garden-lawn';
 import {createGardenFruit} from './garden-fruit';
+import {createGardenBloom} from './garden-bloom';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {materials, type Actor, type buildWorld} from './world';
 import {V,material,group,mesh,box,cyl,branch,consolidate} from './winter-geometry';
@@ -65,12 +66,13 @@ function tang(parent:T.Object3D):Actor{
 
 export function createGarden(scene:T.Scene,world:ReturnType<typeof buildWorld>){
  const root=group(scene);root.name='Left courtyard garden extension';const fixed=group(root),winter=group(root),lights=group(root);
- closedSlab(fixed,outline,.18,.6,materials.stone);closedSlab(fixed,outline,.225,.045,materials.tile);
+ closedSlab(fixed,outline,.18,.14,materials.stone);closedSlab(fixed,outline,.225,.045,materials.tile);
  // The perimeter is closed, with masonry bed joints on every exposed edge.
- for(let i=0;i<outline.length;i++){const [x,z]=outline[i], [xx,zz]=outline[(i+1)%outline.length];const length=Math.hypot(xx-x,zz-z),count=Math.ceil(length/.8);for(let n=0;n<count;n++)for(let row=0;row<2;row++){const f=(n+.5)/count;const block=round(fixed,length/count-.018,.265,.075,x+(xx-x)*f,-.22+row*.29,z+(zz-z)*f,materials.stone,.003);block.rotation.y=-Math.atan2(zz-z,xx-x)}}
+ for(let i=0;i<outline.length;i++){const [x,z]=outline[i], [xx,zz]=outline[(i+1)%outline.length];const length=Math.hypot(xx-x,zz-z),count=Math.ceil(length/.8);for(let n=0;n<count;n++)for(let row=0;row<1;row++){const f=(n+.5)/count;const block=round(fixed,length/count-.018,.12,.075,x+(xx-x)*f,.12+row*.29,z+(zz-z)*f,materials.stone,.003);block.rotation.y=-Math.atan2(zz-z,xx-x)}}
  // Closed stone slab/coping retained; only its interior top becomes living turf.
  const lawn=createGardenLawn(root);
  const fruit=createGardenFruit(root);
+ const bloom=createGardenBloom(root);
  // Keep the established herb placement RNG after removing the old seam/gravel.
  for(let i=0;i<2520;i++)rand();
  const plants=[{x:-.1,z:6.2,h:1.65,pot:0},{x:3,z:8.65,h:1.85,pot:0},{x:3.1,z:5.95,h:1.5,pot:0},{x:5.75,z:6.65,h:1.45,pot:.3},{x:-.95,z:7.6,h:1.7,pot:.45}];
@@ -99,5 +101,6 @@ export function createGarden(scene:T.Scene,world:ReturnType<typeof buildWorld>){
  for(const part of [fixed,winter,lights]){consolidate(part);part.traverse(o=>{if(o instanceof T.Mesh)o.castShadow=true})}winter.visible=false;lights.visible=false;
  root.rotation.y=Math.PI/2;root.position.set(-14.3,0,3.95);root.updateWorldMatrix(true,true);
  const bounds=new T.Box3().setFromObject(root),labelAnchor=V(0,0,0);
- return {root,actor,outline:worldOutline,bounds,labelAnchor,update(t:number,snow:boolean,night:boolean,rain=false){lawn.update(t,snow?'snow':rain?'rain':'sun');fruit.update(snow,rain);winter.visible=snow;lights.visible=snow||night;actor.head.rotation.y=Math.sin(t*.27)*.035;actor.head.rotation.z=Math.sin(t*.35)*.018;actor.root.updateWorldMatrix(true,true);actor.head.getWorldPosition(labelAnchor);labelAnchor.y+=.89;},diagnostics:()=>({side:'building-left-negative-x',lawn:lawn.diagnostics(),fruit:fruit.diagnostics(),outline:worldOutline,combinedFootprint:[[-8.87,-4.5],[5.6,-4.5],[5.6,5.4],[-8.87,5.4]],joinWidth:0,plantCount:plants.length,groundPlants:3,pottedPlants:2,position:actor.root.getWorldPosition(V(0,0,0)).toArray(),height:new T.Box3().setFromObject(actor.root).getSize(V(0,0,0)).y,winter:winter.visible,bounds:{min:bounds.min.toArray(),max:bounds.max.toArray()}})};
+ for(const h of fruit.hotspots)h.mesh.getWorldPosition(h.point);
+ return {root,actor,hotspots:fruit.hotspots,setCultivation:fruit.setCultivation,outline:worldOutline,bounds,labelAnchor,update(t:number,snow:boolean,night:boolean,rain=false){lawn.update(t,snow?'snow':rain?'rain':'sun');fruit.update(snow,rain);bloom.update(t,snow,rain);winter.visible=snow;lights.visible=snow||night;actor.head.rotation.y=Math.sin(t*.27)*.035;actor.head.rotation.z=Math.sin(t*.35)*.018;actor.root.updateWorldMatrix(true,true);actor.head.getWorldPosition(labelAnchor);labelAnchor.y+=.89;},diagnostics:()=>({side:'building-left-negative-x',lawn:lawn.diagnostics(),bloom:bloom.diagnostics(),fruit:fruit.diagnostics(),outline:worldOutline,combinedFootprint:[[-8.87,-4.5],[5.6,-4.5],[5.6,5.4],[-8.87,5.4]],joinWidth:0,plantCount:plants.length,groundPlants:3,pottedPlants:2,position:actor.root.getWorldPosition(V(0,0,0)).toArray(),height:new T.Box3().setFromObject(actor.root).getSize(V(0,0,0)).y,winter:winter.visible,bounds:{min:bounds.min.toArray(),max:bounds.max.toArray()}})};
 }

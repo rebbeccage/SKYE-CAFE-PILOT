@@ -1,0 +1,10 @@
+/* A transient paper margin note; all input passes through to the scene. */
+#scene-entry-hint{position:absolute;z-index:4;left:50%;bottom:calc(204px + env(safe-area-inset-bottom));transform:translate(-50%,3px);width:max-content;max-width:min(700px,calc(100% - 32px));padding:8px 13px;border-radius:5px 8px 6px 7px;background:rgba(248,246,237,.91);color:var(--ui-ink,#3e4a38);box-shadow:0 2px 10px #3949360c;font:14px/1.65 var(--ui-serif,serif);text-align:center;pointer-events:none;opacity:0;transition:opacity .2s ease,transform .2s ease;}
+#scene-entry-hint.is-visible{opacity:1;transform:translate(-50%,0)}
+.panel-open #scene-entry-hint,.dialogue-open #scene-entry-hint,.photo-mode #scene-entry-hint{visibility:hidden}
+#app .scene-tools #help{width:auto;padding:0 9px;gap:6px;font-size:12px;min-height:44px}
+#guide .current-operation{border-bottom:1px solid #a8b98f50;padding-bottom:12px;margin-bottom:14px}
+#guide .current-operation strong{font:16px var(--ui-serif,serif);color:#3e4a38}
+#guide p{color:#52624a;font-size:14px;line-height:1.8}#guide{max-height:calc(100dvh - 32px);overflow-y:auto}#close-guide{min-width:44px;min-height:44px}
+@media(max-width:600px){#scene-entry-hint{font-size:13px;line-height:1.65;padding:8px 10px;max-width:calc(100% - 32px)}}
+@media(prefers-reduced-motion:reduce){#scene-entry-hint{transition:none;transform:translate(-50%,0)}}

@@ -1,7 +1,7 @@
 // Shared world coordinates: routes, table service points, and stepped entry heights.
 export type Node=readonly [number,number,number];
-const stage:Node=[-1.1,.26,3.85];
-const entry:Node[]=[stage,[-1.1,.26,3.62],[-1.1,.39,3.32],[-1.1,.54,3.01],[-1.1,.69,2.7],[-1.1,.85,2.39],[-1.1,.85,1.72],[-.7,.85,1.5]];
+const stage:Node=[-1.1,.405,3.85];
+const entry:Node[]=[stage,[-1.1,.55,3.05],[-1.1,.70,3.05],[-1.1,.70,2.70],[-1.1,.85,2.70],[-1.1,.85,2.39],[-1.1,.85,1.72],[-.7,.85,1.5]];
 export const serviceStops=[
  {id:'patio-lin',cup:[3.73,1.19,2.8] as Node,yaw:-Math.PI/2,route:[stage,[-.3,.26,4.65],[4.75,.26,4.65],[4.75,.26,2.8],[4.5,.26,2.8]] as Node[]},
  {id:'patio-north',cup:[3.73,1.19,.35] as Node,yaw:-Math.PI/2,route:[stage,[-.3,.26,4.65],[4.75,.26,4.65],[4.75,.26,.35],[4.5,.26,.35]] as Node[]},
