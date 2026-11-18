@@ -48,8 +48,8 @@ export function createMona(scene:T.Scene,host:HTMLElement,onTalk:()=>void,onErro
   point.copy(root.position);point.y+=.77;hit.position.copy(point);
   anchor.copy(root.position);anchor.y+=closeView?-.08:1.58;projected.copy(anchor).project(camera);
   const x=(projected.x*.5+.5)*width,y=(-projected.y*.5+.5)*height;
-  label.hidden=resident||!interactive||projected.z< -1||projected.z>1||x<65||x>width-65||y<65||y>height-110;
+  label.hidden=true; // Unified head label is non-interactive; keep the original NPC hitbox.
   label.textContent='莫娜 · 聊聊';label.style.left=x+'px';label.style.top=y+'px';
  }
- return {hotspot,update,get interactive(){return interactive},diagnostics:()=>({loaded,loading,loadError,visible:root.visible,interactive,opacity,position:root.position.toArray(),yaw:root.rotation.y,height:1.35,size,animationCount,route:[[-5.8,.26,3.85],[-5.8,.26,3.05]],behaviour:'garden-stroll-and-rest'})};
+ return {root,hotspot,update,get interactive(){return interactive},diagnostics:()=>({loaded,loading,loadError,visible:root.visible,interactive,opacity,position:root.position.toArray(),yaw:root.rotation.y,height:1.35,size,animationCount,route:[[-5.8,.26,3.85],[-5.8,.26,3.05]],behaviour:'garden-stroll-and-rest'})};
 }

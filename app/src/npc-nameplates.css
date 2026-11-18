@@ -1,0 +1,4 @@
+.npc-nameplate{position:absolute;left:0;top:0;z-index:2;pointer-events:none;user-select:none;padding:3px 9px;min-width:34px;box-sizing:border-box;text-align:center;color:#3e4a38;background:rgba(247,240,222,.94);border:1px solid rgba(159,142,105,.36);border-radius:7px 9px 6px 8px;box-shadow:0 2px 5px rgba(74,93,63,.09);font:13px/1.35 'Songti SC','Noto Serif SC',serif;white-space:nowrap;will-change:transform}
+.npc-nameplate::after{content:'';position:absolute;left:50%;top:100%;height:var(--name-stem,5px);border-left:1px solid rgba(74,93,63,.27)}
+.npc-nameplate[hidden]{display:none}
+@media(max-width:600px){.npc-nameplate{font-size:12px;padding:2px 7px;min-width:32px}}

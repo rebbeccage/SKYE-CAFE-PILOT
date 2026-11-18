@@ -169,7 +169,11 @@ export function createStiltHouses(scene:T.Scene,mobile:boolean){
    for(const s of [-1,1]){const p=c.clone().addScaledVector(side,s*(w/2-.07));pile(p.x,p.z,c.y-.05);}
    const aa=c.clone().addScaledVector(side,-w/2),bb=c.clone().addScaledVector(side,w/2);aa.y-=.18;bb.y-=.18;branch(fixed,aa,bb,.05,oldWood,.05);
   }
-  if(rails){for(const s of [-1,1])rail(g,V(s*w/2,0,0),V(s*w/2,b.y-a.y,length));}
+  if(rails){for(const side of [-1,1]){
+   // One shore-side opening serves the short approved bypass to house C.
+   const end=steps&&side<0?Math.max(0,length-1.65):length;
+   rail(g,V(side*w/2,0,0),V(side*w/2,(b.y-a.y)*end/length,end));
+  }}
   const ice=group(snow);ice.position.copy(a);ice.rotation.y=g.rotation.y;
   // Snow only rests on upward deck surfaces, never the piles' vertical faces.
   if(steps){for(let i=0;i<n;i++)box(ice,w-.04,.023,length/n-.018,0,top((i+.5)/n)-a.y+.012,(i+.5)*length/n,snowMat);}
@@ -185,6 +189,13 @@ export function createStiltHouses(scene:T.Scene,mobile:boolean){
   const a=spineNodes[i]+.5,b=spineNodes[i+1]-.5;if(b>a)rail(fixed,V(spineX+side*.43,FLOOR,a),V(spineX+side*.43,FLOOR,b));
  }
  for(const e of entries)walkway(V(spineX,FLOOR,e.z),e,.86,true);
+ // The decorative spine grazes house C; retain the house and add a short supported elbow.
+ const bypassX=spineX-1.35;
+ const bypassStart=V(bypassX,T.MathUtils.lerp(shoreStart.y,FLOOR,(bypassX-shoreStart.x)/(spineX-shoreStart.x)),joinZ);
+ const bypassElbow=V(bypassX,FLOOR,joinZ+.8);
+ walkway(bypassStart,bypassElbow,.90,false,true);
+ walkway(bypassElbow,entries[2],.90,true);
+
  // Local animated props are deliberately excluded from static material batches.
  const animated=group(root);for(const w of wind){root.updateWorldMatrix(true,true);animated.attach(w.root);}
  consolidate(fixed);consolidate(snow);
