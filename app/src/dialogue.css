@@ -7,7 +7,7 @@
 .dialogue-plate{padding:12px 24px 8px;background:rgba(248,246,237,.96);border-radius:16px 13px 15px 12px;box-shadow:0 6px 24px #3949361a,inset 0 0 0 1px #fff9;animation:paper-arrive .2s ease-out both}
 .narrative-header{display:flex;align-items:center;gap:12px;min-height:52px}
 .dialogue-person{flex:none}.dialogue-avatar{width:52px;height:52px;border-radius:50%;overflow:hidden;border:1px solid #b4bea16b}.dialogue-avatar img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 45%}
-.dialogue-art{display:block;width:100%;height:100%;background:url('./assets/ui/dialogue-gouache-atlas.png') calc(var(--portrait)*50%) 0/300% 200%}
+.dialogue-art{display:block;width:100%;height:100%;background:var(--media-dialogue,none) calc(var(--portrait)*50%) 0/300% 200%}
 .dialogue-name{font-size:18px;color:#45563e;white-space:nowrap;letter-spacing:.06em}
 .dialogue-tools{margin-left:auto;display:flex;align-items:center;gap:2px}
 .dialogue-tools button,.dialogue-plate footer button{min-width:44px;min-height:44px;padding:6px 9px;border:0;border-radius:5px;box-shadow:none;background:transparent;font:14px/1.5 var(--ui-serif);color:#52634b}

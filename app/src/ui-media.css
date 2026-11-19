@@ -1,0 +1,4 @@
+img[data-media-src]{aspect-ratio:1;background:#f4efdf;transition:opacity 160ms ease-out}
+img.media-pending{opacity:0}
+img.media-ready{opacity:1}
+@media(prefers-reduced-motion:reduce){img[data-media-src]{transition:none}}

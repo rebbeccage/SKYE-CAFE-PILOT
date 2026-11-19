@@ -1,7 +1,8 @@
+import {clone as cloneModel} from 'three/addons/utils/SkeletonUtils.js';
 import {cacheTransforms} from './transform-cache';
 import * as T from 'three';
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import modelUrl from './assets/models/mona.glb?url';
+import {acquireGLB} from './asset-manager';
+import modelUrl from './assets/models/mona.optimized.glb?url';
 
 // Independent visitor: never inserted into world.actors or the three story slots.
 // Garden-local (0.1..0.9, 8.5) → world (-5.8, 3.85..3.05).
@@ -16,18 +17,18 @@ export function createMona(scene:T.Scene,host:HTMLElement,onTalk:()=>void,onErro
  const label=document.createElement('button');label.id='mona-talk';label.className='mona-talk';label.textContent='莫娜 · 聊聊';label.hidden=true;host.append(label);label.onclick=()=>{if(interactive)onTalk()};
  const materials:{material:T.Material;opacity:number;transparent:boolean;depthWrite:boolean}[]=[];
  let loaded=false,loading=false,loadError=false,retryAt=0,opacity=0,elapsed=0,interactive=false,mixer:T.AnimationMixer|undefined,animationCount=0;
- let size:number[]=[];
+ let size:number[]=[],disposed=false;let lease:ReturnType<typeof acquireGLB>|undefined;
  async function load(time:number){
-  if(loading||loaded||time<retryAt)return;loading=true;loadError=false;
+  if(disposed||loading||loaded||time<retryAt)return;loading=true;loadError=false;
   try{
-   const gltf=await new GLTFLoader().loadAsync(modelUrl),model=gltf.scene;
+   lease=acquireGLB(modelUrl,'visible');const gltf=await lease.ready;if(disposed)return;const model=cloneModel(gltf.scene);
    const bounds=new T.Box3().setFromObject(model),extent=bounds.getSize(new T.Vector3()),center=bounds.getCenter(new T.Vector3());
    const scale=1.35/extent.y;model.scale.setScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);visual.add(model);
    model.traverse(o=>{if(o instanceof T.Mesh){o.castShadow=true;o.receiveShadow=true;const copy=(m:T.Material)=>{const c=m.clone();materials.push({material:c,opacity:c.opacity,transparent:c.transparent,depthWrite:c.depthWrite});return c};o.material=Array.isArray(o.material)?o.material.map(copy):copy(o.material)}});
    size=new T.Box3().setFromObject(model).getSize(new T.Vector3()).toArray();animationCount=gltf.animations.length;
    if(animationCount){mixer=new T.AnimationMixer(model);mixer.clipAction(gltf.animations[0]).play()}
    cacheTransforms(model);loaded=true;
-  }catch{loadError=true;retryAt=time+30;onError()}finally{loading=false}
+  }catch{lease?.release();lease=undefined;loadError=true;retryAt=time+30;onError()}finally{loading=false}
  }
  // A grounded, low-amplitude idle keeps the unrigged mesh intact. No limb deformation.
  function update(dt:number,time:number,eligible:boolean,ownConversation:boolean,camera:T.Camera,width:number,height:number,resident=false,closeView=false){
@@ -52,5 +53,5 @@ export function createMona(scene:T.Scene,host:HTMLElement,onTalk:()=>void,onErro
   label.hidden=true; // Unified head label is non-interactive; keep the original NPC hitbox.
   label.textContent='莫娜 · 聊聊';label.style.left=x+'px';label.style.top=y+'px';
  }
- return {root,hotspot,update,get interactive(){return interactive},diagnostics:()=>({loaded,loading,loadError,visible:root.visible,interactive,opacity,position:root.position.toArray(),yaw:root.rotation.y,height:1.35,size,animationCount,route:[[-5.8,.26,3.85],[-5.8,.26,3.05]],behaviour:'garden-stroll-and-rest'})};
+ return {root,hotspot,update,dispose(){disposed=true;mixer?.stopAllAction();root.removeFromParent();hit.removeFromParent();label.remove();materials.forEach(m=>m.material.dispose());lease?.release();},get interactive(){return interactive},diagnostics:()=>({loaded,loading,loadError,visible:root.visible,interactive,opacity,position:root.position.toArray(),yaw:root.rotation.y,height:1.35,size,animationCount,route:[[-5.8,.26,3.85],[-5.8,.26,3.05]],behaviour:'garden-stroll-and-rest'})};
 }

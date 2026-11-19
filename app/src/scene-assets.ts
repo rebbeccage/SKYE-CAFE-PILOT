@@ -1,9 +1,10 @@
+import {clone as cloneModel} from 'three/addons/utils/SkeletonUtils.js';
 import {cacheTransforms} from './transform-cache';
 import * as T from 'three';
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import aheUrl from './assets/models/ahe.glb?url';
-import linUrl from './assets/models/lin.glb?url';
-import truckUrl from './assets/models/ice-cream-truck.glb?url';
+import {acquireGLB,type AssetPriority} from './asset-manager';
+import aheUrl from './assets/models/ahe.optimized.glb?url';
+import linUrl from './assets/models/lin.optimized.glb?url';
+import truckUrl from './assets/models/ice-cream-truck.optimized.glb?url';
 import {beachGround as terrainHeight} from './beach-ground';
 import {TRUCK_POSITION} from './island-layout';
 import type {buildWorld} from './world';
@@ -14,18 +15,18 @@ export function createSceneAssets(scene:T.Scene,world:ReturnType<typeof buildWor
  const lin=world.actors[1],linVisual=new T.Group(),truck=new T.Group();
  linVisual.name='Lin — supplied GLB';truck.name='Beach ice cream truck';scene.add(truck);
  let linReady=false,truckReady=false;const errors:string[]=[];const sizes:Record<string,number[]>={};
- const loader=new GLTFLoader();
+ let disposed=false;const leases:ReturnType<typeof acquireGLB>[]=[],ownedMaterials:T.Material[]=[];const loader={loadAsync:(url:string,priority:AssetPriority='visible')=>{const lease=acquireGLB(url,priority);leases.push(lease);return lease.ready.then(asset=>{if(disposed)throw new Error('Scene assets disposed');return asset})}};
  async function load(url:string,height:number,name:string){
-  const asset=await loader.loadAsync(url),model=asset.scene,bounds=new T.Box3().setFromObject(model),size=bounds.getSize(new T.Vector3()),center=bounds.getCenter(new T.Vector3()),scale=height/size.y;
+  const asset=await loader.loadAsync(url,name==='truck'?'idle':'visible'),model=cloneModel(asset.scene),bounds=new T.Box3().setFromObject(model),size=bounds.getSize(new T.Vector3()),center=bounds.getCenter(new T.Vector3()),scale=height/size.y;
   model.scale.multiplyScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);
   if(!asset.animations.length)model.traverse(o=>{o.updateMatrix();o.matrixAutoUpdate=false});model.traverse(o=>{if(o instanceof T.Mesh){o.castShadow=o.receiveShadow=true}});
   cacheTransforms(model);sizes[name]=size.multiplyScalar(scale).toArray();return model;
  }
- void loader.loadAsync(aheUrl).then(asset=>{
-  const model=asset.scene,b=new T.Box3().setFromObject(model),size=b.getSize(new T.Vector3()),center=b.getCenter(new T.Vector3()),scale=1.8/(size.y*ahe.root.scale.y);
+ void loader.loadAsync(aheUrl,'critical').then(asset=>{
+  const model=cloneModel(asset.scene),b=new T.Box3().setFromObject(model),size=b.getSize(new T.Vector3()),center=b.getCenter(new T.Vector3()),scale=1.8/(size.y*ahe.root.scale.y);
   model.scale.setScalar(scale);model.position.set(-center.x*scale,-b.min.y*scale,-center.z*scale);
   if(!asset.animations.length)model.traverse(o=>{o.updateMatrix();o.matrixAutoUpdate=false});const materialCache=new Map<T.Material,T.Material>();
-  model.traverse(o=>{if(o instanceof T.Mesh){o.castShadow=o.receiveShadow=true;const tune=(m:T.Material)=>{const found=materialCache.get(m);if(found)return found;const c=m.clone();materialCache.set(m,c);if(c instanceof T.MeshStandardMaterial){c.metalness=0;c.roughness=Math.max(.72,c.roughness);c.envMapIntensity=.45;if(c.map)c.map.colorSpace=T.SRGBColorSpace;}return c};o.material=Array.isArray(o.material)?o.material.map(tune):tune(o.material)}});
+  model.traverse(o=>{if(o instanceof T.Mesh){o.castShadow=o.receiveShadow=true;const tune=(m:T.Material)=>{const found=materialCache.get(m);if(found)return found;const c=m.clone();ownedMaterials.push(c);materialCache.set(m,c);if(c instanceof T.MeshStandardMaterial){c.metalness=0;c.roughness=Math.max(.72,c.roughness);c.envMapIntensity=.45;if(c.map)c.map.colorSpace=T.SRGBColorSpace;}return c};o.material=Array.isArray(o.material)?o.material.map(tune):tune(o.material)}});
   // Fit the existing narrow service aisle without moving its story/click anchor.
   cacheTransforms(model);aheVisual.position.z=-.15;aheVisual.scale.z=.68;aheVisual.add(model);ahe.root.add(aheVisual);
   aheAnimations=asset.animations.length;if(aheAnimations){aheMixer=new T.AnimationMixer(model);for(const clip of asset.animations)aheActions.push(aheMixer.clipAction(clip));aheAction=aheActions[0];aheAction.play()}
@@ -38,7 +39,7 @@ export function createSceneAssets(scene:T.Scene,world:ReturnType<typeof buildWor
  truck.position.set(x,terrainHeight(x,z)+.008,z);
  truck.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),new T.Vector3(-dx,1,-dz).normalize());
  truck.quaternion.multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),-.28));
- const loadTruck=()=>load(truckUrl,2.65,'truck').then(model=>{truck.add(model);truckReady=true}).catch(()=>{errors.push('truck');failed('冰激凌车')});
+ const loadTruck=()=>disposed?Promise.resolve():load(truckUrl,2.65,'truck').then(model=>{truck.add(model);truckReady=true}).catch(()=>{errors.push('truck');failed('冰激凌车')});
  // Defer the distant asset until the UI and cafe have had a chance to paint.
  if('requestIdleCallback' in window)window.requestIdleCallback(loadTruck,{timeout:2500});else setTimeout(loadTruck,1500);
  function update(time:number,snow:boolean,dt=0,order=0){
@@ -50,5 +51,5 @@ export function createSceneAssets(scene:T.Scene,world:ReturnType<typeof buildWor
   if(!lin.root.userData.pathResident)lin.root.position.set(...(snow?[-1.68,.85,-.80]:[2.65,.26,3.65]) as [number,number,number]);
   if(!lin.root.userData.pathResident)lin.root.rotation.set(0,snow?2.4:.35,0);linVisual.scale.y=1+Math.sin(time*1.3)*.001;
  }
- return {update,diagnostics:()=>({ahe:{ready:aheReady,animationCount:aheAnimations,asset:'ahe.glb',height:1.8,legacyVisible:ahe.root.children.filter(c=>c!==aheVisual&&c.visible).length,bounds:(()=>{const b=new T.Box3().setFromObject(aheVisual);return aheReady?{min:b.min.toArray(),max:b.max.toArray()}:null})()},lin:{ready:linReady,position:lin.root.position.toArray(),height:1.35,visibleLegacyChildren:lin.root.children.filter(c=>c!==linVisual&&c.visible).length},truck:{ready:truckReady,position:truck.position.toArray(),size:sizes.truck,bounds:(()=>{const b=new T.Box3().setFromObject(truck);return truckReady?{min:b.min.toArray(),max:b.max.toArray()}:null})()},errors})};
+ return {update,dispose(){disposed=true;aheMixer?.stopAllAction();aheVisual.removeFromParent();linVisual.removeFromParent();truck.removeFromParent();ownedMaterials.forEach(m=>m.dispose());leases.forEach(l=>l.release());},diagnostics:()=>({ahe:{ready:aheReady,animationCount:aheAnimations,asset:'ahe.glb',height:1.8,legacyVisible:ahe.root.children.filter(c=>c!==aheVisual&&c.visible).length,bounds:(()=>{const b=new T.Box3().setFromObject(aheVisual);return aheReady?{min:b.min.toArray(),max:b.max.toArray()}:null})()},lin:{ready:linReady,position:lin.root.position.toArray(),height:1.35,visibleLegacyChildren:lin.root.children.filter(c=>c!==linVisual&&c.visible).length},truck:{ready:truckReady,position:truck.position.toArray(),size:sizes.truck,bounds:(()=>{const b=new T.Box3().setFromObject(truck);return truckReady?{min:b.min.toArray(),max:b.max.toArray()}:null})()},errors})};
 }

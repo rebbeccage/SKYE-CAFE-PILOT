@@ -1,3 +1,4 @@
+import {decodeMedia} from './ui-media';
 import watercolorMapUrl from './assets/ui/island-map-watercolor-v2.webp';
 import {islandMapOutline,worldToMap} from './island-map-model';
 import {islandTrails} from './island-trails-data';
@@ -35,7 +36,7 @@ let illustration:Promise<HTMLImageElement>|undefined;
 export async function paintIslandMap(canvas:HTMLCanvasElement,layout:NavigationLayout){
  paintFallbackMap(canvas,layout);
  try{
-  illustration??=new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('Map illustration unavailable'));img.src=watercolorMapUrl;});
+  illustration??=decodeMedia(watercolorMapUrl);
   const img=await illustration;canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
   canvas.getContext('2d')!.drawImage(img,0,0);canvas.dataset.art='watercolor-v2';
  }catch{canvas.dataset.art='geographic-fallback';}

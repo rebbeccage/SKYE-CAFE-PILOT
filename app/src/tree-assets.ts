@@ -1,6 +1,6 @@
 import * as T from 'three';
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import treeUrl from './assets/models/tree_ash_medium.glb?url';
+import {acquireGLB} from './asset-manager';
+import treeUrl from './assets/models/tree_ash_medium.optimized.glb?url';
 
 // The original courtyard anchors and ground height, shared with navigation.
 // The exported root has an 8 cm radius; a 16 cm footprint allows for its lean.
@@ -13,22 +13,15 @@ export const TREE_PLACEMENTS = [
 export const TREE_GROUND_Y=.26;
 export const TREE_TRUNK_HALF_WIDTH=.16;
 
-const loader=new GLTFLoader();
+let lease:ReturnType<typeof acquireGLB>|undefined;
 let cached:Promise<T.Group>|undefined;
 let users=0;
 const isLeaves=(o:T.Object3D)=>o.name==='TREE_ASH_LEAVES'||o.name==='TREE_ASH_LEAVE';
 function leavesIn(model:T.Object3D){let leaves:T.Object3D|undefined;model.traverse(o=>{if(isLeaves(o))leaves=o});return leaves;}
 
-function disposeSource(model:T.Group){
- const geometries=new Set<T.BufferGeometry>(),materials=new Set<T.Material>(),textures=new Set<T.Texture>();
- model.traverse(o=>{if(o instanceof T.Mesh){geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])materials.add(m)}});
- for(const m of materials)for(const value of Object.values(m))if(value instanceof T.Texture)textures.add(value);
- const images=new Set<ImageBitmap>();
- for(const t of textures){if(typeof ImageBitmap!=='undefined'&&t.image instanceof ImageBitmap)images.add(t.image);t.dispose()}
- images.forEach(i=>i.close());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());
-}
+function disposeSource(_model:T.Group){lease?.release();lease=undefined;}
 function source(){
- if(!cached)cached=loader.loadAsync(treeUrl).then(({scene:model})=>{
+ if(!cached)cached=(lease=acquireGLB(treeUrl,'visible')).ready.then(({scene:model})=>{
   const leaves=leavesIn(model),trunk=model.getObjectByName('TRUNK');
   if(!model.getObjectByName('Tree_Ash_Medium')||!leaves||!trunk){disposeSource(model);throw new Error('Expected Tree_Ash_Medium with TREE_ASH_LEAVES (or TREE_ASH_LEAVE) and TRUNK')}
   // Keep GLTFLoader's maps, UV transforms, MASK cutoff and sidedness intact.
@@ -62,7 +55,7 @@ export function createTreeAssets(scene:T.Scene,seasonalFoliage:T.Object3D[]){
   }
   root.visible=!winter;root.updateMatrixWorld(true);
   // Never insert an unpositioned instance at the world origin during loading.
-  scene.add(root);
+  root.traverse(o=>{o.updateMatrix();o.matrixAutoUpdate=false});scene.add(root);
  }).catch(reason=>{
   if(disposed)return;
   error=String(reason);console.error('[tree-assets] Could not load tree_ash_medium.glb; the game will continue.',reason);
@@ -77,7 +70,7 @@ export function createTreeAssets(scene:T.Scene,seasonalFoliage:T.Object3D[]){
   for(const leaf of foliage){const i=seasonalFoliage.indexOf(leaf);if(i!==-1)seasonalFoliage.splice(i,1)}
   root.clear();instances.length=0;foliage.length=0;users--;
   // An in-flight load may finish after teardown. Only its last consumer frees it.
-  void pending.then(model=>{if(users===0&&cached===pending){cached=undefined;disposeSource(model)}},()=>{if(users===0&&cached===pending)cached=undefined});
+  void pending.then(model=>{if(users===0&&cached===pending){cached=undefined;disposeSource(model)}},()=>{if(users===0&&cached===pending){cached=undefined;lease?.release();lease=undefined}});
  }
  function diagnostics(){
   const geometries=new Set<string>(),materials=new Set<string>(),textures=new Set<string>();

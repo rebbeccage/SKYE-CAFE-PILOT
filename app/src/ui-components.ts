@@ -9,7 +9,7 @@ export function navigationButton(id:string,label:string,icon:WatercolorIcon,desc
  return `<button class="paper-control nav-tile" data-open="${id}" aria-label="${label}" title="${description}" aria-haspopup="dialog">${watercolorIcon(icon)}<span class="nav-label">${label}</span><i class="nav-leaf" aria-hidden="true" hidden></i><span class="nav-lock" aria-hidden="true" hidden></span></button>`;
 }
 export function avatarBadge(name:string,url:string){
- return `<span class="avatar-crop"><img src="${url}" alt="${name}的水彩头像"><i class="story-leaf" aria-hidden="true" hidden></i></span><span class="avatar-name">${name}</span>`;
+ return `<span class="avatar-crop"><img width="192" height="192" decoding="async" src="${url}" alt="${name}的水彩头像"><i class="story-leaf" aria-hidden="true" hidden></i></span><span class="avatar-name">${name}</span>`;
 }
 export function taskProgress(){return `<div class="goal-meter">${watercolorIcon('sprout')}<progress hidden aria-label="当前目标进度"></progress></div>`}
 export function weatherLabel(weather:'sun'|'rain'|'snow'){

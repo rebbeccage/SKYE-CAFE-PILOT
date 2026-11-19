@@ -1,6 +1,6 @@
 import * as T from 'three';
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import bushUrl from './assets/models/bush_01.glb?url';
+import {acquireGLB} from './asset-manager';
+import bushUrl from './assets/models/bush_01.optimized.glb?url';
 
 export const BUSH_PLACEMENTS = [
  {id:'cafe-west-a',x:-3.7,z:.8,scale:1.15,yaw:12},
@@ -12,7 +12,7 @@ export const BUSH_PLACEMENTS = [
  {id:'garden-small',x:-3.8,z:3.6,scale:.72,yaw:42},
 ] as const;
 export const BUSH_GROUND_Y=.26;
-const loader=new GLTFLoader();
+let lease:ReturnType<typeof acquireGLB>|undefined;
 let cached:Promise<T.Group>|undefined,users=0,requests=0;
 function resources(root:T.Object3D){
  const geometries=new Set<T.BufferGeometry>(),materials=new Set<T.Material>(),textures=new Set<T.Texture>();
@@ -20,13 +20,9 @@ function resources(root:T.Object3D){
  for(const m of materials)for(const v of Object.values(m))if(v instanceof T.Texture)textures.add(v);
  return {geometries,materials,textures};
 }
-function disposeSource(model:T.Group){
- const r=resources(model),images=new Set<ImageBitmap>();
- r.textures.forEach(t=>{if(typeof ImageBitmap!=='undefined'&&t.image instanceof ImageBitmap)images.add(t.image);t.dispose()});
- images.forEach(i=>i.close());r.materials.forEach(m=>m.dispose());r.geometries.forEach(g=>g.dispose());
-}
+function disposeSource(_model:T.Group){lease?.release();lease=undefined;}
 function source(){
- if(!cached){requests++;cached=loader.loadAsync(bushUrl).then(({scene:model})=>{
+ if(!cached){requests++;cached=(lease=acquireGLB(bushUrl,'visible')).ready.then(({scene:model})=>{
   const leaves=model.getObjectByName('BUSH_LEAVES'),trunk=model.getObjectByName('BUSH_TRUNK');
   if(!model.getObjectByName('Bush_01')||!leaves||!trunk){disposeSource(model);throw new Error('Expected Bush_01 with BUSH_LEAVES and BUSH_TRUNK');}
   leaves.traverse(o=>{if(o instanceof T.Mesh){o.castShadow=false;o.receiveShadow=true}});
@@ -56,14 +52,14 @@ export function createBushAssets(scene:T.Scene,seasonalFoliage:T.Object3D[]){
    const leaves=clone.getObjectByName('BUSH_LEAVES')!;leaves.visible=!winter;
    instances.push(instance);foliage.push(leaves);seasonalFoliage.push(leaves);root.add(instance);
   }
-  root.updateMatrixWorld(true);scene.add(root);
+  root.updateMatrixWorld(true);root.traverse(o=>{o.updateMatrix();o.matrixAutoUpdate=false});scene.add(root);
  }).catch(reason=>{if(disposed)return;error=String(reason);console.error('[bush-assets] Could not load bush_01.glb; the game will continue.',reason);});
  function setWinter(on:boolean){winter=on;for(const leaf of foliage)leaf.visible=!on;}
  function dispose(){
   if(disposed)return;disposed=true;root.removeFromParent();
   for(const leaf of foliage){const i=seasonalFoliage.indexOf(leaf);if(i!==-1)seasonalFoliage.splice(i,1)}
   root.clear();instances.length=0;foliage.length=0;users--;
-  void pending.then(model=>{if(users===0&&cached===pending){cached=undefined;disposeSource(model)}},()=>{if(users===0&&cached===pending)cached=undefined});
+  void pending.then(model=>{if(users===0&&cached===pending){cached=undefined;disposeSource(model)}},()=>{if(users===0&&cached===pending){cached=undefined;lease?.release();lease=undefined}});
  }
  function diagnostics(){
   const r=resources(root);
