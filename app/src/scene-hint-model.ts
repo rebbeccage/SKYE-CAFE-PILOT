@@ -2,10 +2,10 @@ import {nextGoal,gardenActivity,gardenEnabled,cropNames,names,quests,type CafeSa
 export type HintContext={view:SceneVisitId;roaming?:boolean;ready:boolean;blocked:boolean;brewing:boolean;storing?:boolean;touch:boolean;weather?:'sun'|'rain'|'snow';save:CafeSave};
 export const sceneHintCopy={
  courtyard:{title:'庭院',first:'点击咖啡屋门口「推门进入」，找阿禾聊聊，开启人物故事。',again:'推门进入咖啡屋，点击阿禾，继续人物故事。',controls:'点击门口「推门进入」到店内；点人物模型听故事，右侧头像只查看人物介绍。'},
- interior:{title:'咖啡馆店内',first:'在吧台点击阿禾听故事；点咖啡机打开菜单，制作餐品赚金币。',again:'在店内点击咖啡机，选餐品并制作，为小店赚取金币。',controls:'点击咖啡机打开菜单，点击空座位坐下；归位后回到站立机位。'},
- 'interior-seat':{title:'店内落座',first:'坐下来，拖动看看房间；点「归位」回到站立视角。',again:'拖动环看房间，点「归位」起身。',controls:'坐着也能拖动环看房间，点「随心逛逛」中的「归位」起身。'},
+ interior:{title:'咖啡馆店内',first:'在吧台点击阿禾听故事；点咖啡机打开菜单，制作餐品赚金币。',again:'在店内点击咖啡机，选餐品并制作，为小店赚取金币。',controls:'点击咖啡机打开菜单，点击空座位坐下；点击「起身」回到站立机位。'},
+ 'interior-seat':{title:'店内落座',first:'坐下来，拖动看看房间；点「起身」回到站立视角。',again:'拖动环看房间，点「起身」回到站立视角。',controls:'坐着也能拖动环看房间，点「起身」回到站立视角。'},
  'garden-close':{title:'花园近景',first:'在花园点击棠姨，了解她的故事；拖动近看花丛，点返回离开。',again:'在花园点击棠姨听故事，点返回回庭院。',controls:'拖动小范围环视，点场景中的棠姨听故事；点「返回原视角」离开近景。'},
- island:{title:'全岛观察',first:'拖动环看小岛，{zoom}靠近风景；点「归位」回小店。',again:'拖动看岛，{zoom}；点「归位」回小店。',controls:'拖动环看小岛；点「随心逛逛」中的「归位」回小店。港口游船是环境装饰。'},
+ island:{title:'全岛观察',first:'拖动环看小岛，{zoom}靠近风景；再点「全岛」回小店。',again:'拖动看岛，{zoom}；再点「全岛」回小店。',controls:'拖动环看小岛；再点「随心逛逛」中的「全岛」回小店。点击港口游船可以查看出海开放提示。'},
  'beach-seat':{title:'沙滩躺椅',first:'坐着听听海浪，拖动慢慢看海；点「起身」回庭院。',again:'拖动看海，点「起身」回庭院。',controls:'坐着拖动环视海面，点「起身，回到庭院」离开躺椅。'},
 } satisfies Record<SceneVisitId,{title:string;first:string;again:string;controls:string}>;
 export function sceneHint(c:HintContext,first:boolean){
@@ -22,7 +22,7 @@ export function sceneHint(c:HintContext,first:boolean){
   }
  }else if(view==='courtyard'||view==='interior'){
   if(goal.action==='story'&&(view==='courtyard'||goal.person===0)){
-   const i=goal.person!,name=names[i];const where=i===0?(view==='courtyard'?'进入咖啡屋，在吧台':'在店内吧台'):i===1?(c.weather==='snow'?'进入咖啡屋，在窗边':'到庭院座位旁'):'到花园草径旁';text=`${where}点击${name}，听下一段故事。`;sharesGoal=true;
+   const i=goal.person!,name=names[i];const where=i===0?(view==='courtyard'?'进入咖啡屋，在吧台':'在店内吧台'):i===1?(c.weather==='snow'?'进入咖啡屋，在窗边':'到栈道或庭院座位旁'):'到花园草径旁';text=`${where}点击${name}，听下一段故事。`;sharesGoal=true;
   }else if(goal.action==='quest'){
    const q=quests.find(q=>q.id===goal.quest)!;text=`打开「菜单」选${names[q.person]}的委托，制作${q.dish}以解锁后续故事。`;sharesGoal=true;
   }else if(goal.action==='garden'){

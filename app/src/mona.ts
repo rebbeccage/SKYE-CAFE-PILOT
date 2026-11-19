@@ -1,3 +1,4 @@
+import {cacheTransforms} from './transform-cache';
 import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import modelUrl from './assets/models/mona.glb?url';
@@ -25,7 +26,7 @@ export function createMona(scene:T.Scene,host:HTMLElement,onTalk:()=>void,onErro
    model.traverse(o=>{if(o instanceof T.Mesh){o.castShadow=true;o.receiveShadow=true;const copy=(m:T.Material)=>{const c=m.clone();materials.push({material:c,opacity:c.opacity,transparent:c.transparent,depthWrite:c.depthWrite});return c};o.material=Array.isArray(o.material)?o.material.map(copy):copy(o.material)}});
    size=new T.Box3().setFromObject(model).getSize(new T.Vector3()).toArray();animationCount=gltf.animations.length;
    if(animationCount){mixer=new T.AnimationMixer(model);mixer.clipAction(gltf.animations[0]).play()}
-   loaded=true;
+   cacheTransforms(model);loaded=true;
   }catch{loadError=true;retryAt=time+30;onError()}finally{loading=false}
  }
  // A grounded, low-amplitude idle keeps the unrigged mesh intact. No limb deformation.

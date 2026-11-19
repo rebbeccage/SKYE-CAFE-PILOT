@@ -1,0 +1,11 @@
+Tool: built-in image_gen (successful second request; first failed due to network).
+Reference 1: verification/island-map/layout-reference.png, generated from current geography and object coordinates (not a scene screenshot).
+Reference 2: user's codex-clipboard-8301c4b6-3d4d-4844-a9e6-4f48a16410d6.png concept, painting style only.
+Source output: /Users/rg/.codex/generated_images/01a1d555-24b5-70e2-b1d3-5e5795bf7b8b/exec-8a2a89a0-b0e9-40df-9b05-366ab3f3709e.png
+Shipping: island-map-watercolor-v2.webp, 1254 × 1254, 554752 bytes. Format-only WebP conversion quality 88; no crop or painted UI.
+
+Prompt:
+Redraw first image as richly detailed watercolor storybook island MAP, square 1024x1024. Strictly preserve first image coastline, pier connections and object positions. Second image ONLY style reference, not layout. NO TEXT, labels, UI, player marker or border. Turn rectangles into charming detailed miniature greenhouse at(48%,48%), flowering garden at(37%,49%), open air cinema at(22%,61%), lounge chairs at(25%,58%), three stilt houses at(88%,45%)(90%,53%)(87%,62%), yellow ice cream truck at(71%,70%), wooden harbor at(43%,70%) with three cream boats. Warm ivory sand, sage flowers/leaves, honey wood, blue turquoise rippling water, white shoreline foam, visible watercolor granulation, fine pencil drawing, gentle bird's eye rooftop volumes. Preserve large mostly empty sandy northern half, only sparse low grass and stones there. Do not invent buildings or move coastline. Beautifully painted objects, richly detailed but cohesive. Full square map asset only, no surrounding page or words.
+
+Runtime:
+Loaded only on first map open, decoded once and cached. Canvas remains procedural fallback if unavailable. HTML labels and live world-to-map position use island-map-model.ts; illustration has hand-painted perspective and is not collision/survey data. Do not use illustrated object outlines to calculate navigation or geography.

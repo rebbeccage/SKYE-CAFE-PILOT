@@ -1,10 +1,10 @@
 import * as T from 'three';
 import './npc-nameplates.css';
-type Subject={name:string;anchor:(out:T.Vector3)=>void;visible:()=>boolean};
+type Subject={name:string;onClick?:()=>void;anchor:(out:T.Vector3)=>void;visible:()=>boolean};
 /** Presentation-only labels. The scene raycast remains the sole story entry. */
 export function createNameplates(host:HTMLElement,subjects:Subject[]){
  const point=new T.Vector3();const occupied:{x:number;y:number}[]=[];
- const entries=subjects.map(subject=>{const tag=document.createElement('span');tag.className='npc-nameplate';tag.textContent=subject.name;tag.setAttribute('aria-hidden','true');tag.hidden=true;host.append(tag);return {subject,tag,x:0,y:0,visible:false}});
+ const entries=subjects.map(subject=>{const tag=document.createElement(subject.onClick?'button':'span');tag.className='npc-nameplate';tag.textContent=subject.name;if(subject.onClick){tag.onclick=subject.onClick;tag.setAttribute('aria-label',subject.name);tag.style.pointerEvents='auto';}else tag.setAttribute('aria-hidden','true');tag.hidden=true;host.append(tag);return {subject,tag,x:0,y:0,visible:false}});
  function update(camera:T.Camera,width:number,height:number,blocked:boolean){
   occupied.length=0;
   for(const e of entries){e.subject.anchor(point);point.project(camera);let x=(point.x*.5+.5)*width,y=(-point.y*.5+.5)*height;const anchorY=y;

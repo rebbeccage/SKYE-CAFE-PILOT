@@ -1,3 +1,5 @@
+import {createBushAssets} from './bush-assets';
+import {createTreeAssets} from './tree-assets';
 import * as T from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -57,7 +59,6 @@ function fern(p:T.Object3D,x:number,y:number,z:number,s=.6){
  for(let k=1;k<=7;k++){const f=k/8;const pt=start.clone().lerp(end,f);pt.y+=Math.sin(f*Math.PI)*s*.25;const breadth=Math.sin(f*Math.PI)*s*.19;for(const side of [-1,1]){const o=ball(g,pt.x+Math.cos(a+side*.9)*breadth*.6,pt.y+.02,pt.z+Math.sin(a+side*.9)*breadth*.6,breadth,.018,breadth*.32,j%3===0?materials.greenLight:materials.greenDark,true);o.rotation.y=-a-side*.9;o.rotation.z=side*.25}}}return g;
 }
 function shrub(p:T.Object3D,x:number,y:number,z:number,s=.6){for(let i=0;i<5;i++)ball(p,x+range(-s*.5,s*.5),y+range(.15,s*.5),z+range(-s*.5,s*.5),s*range(.35,.6),s*range(.35,.65),s*range(.35,.6),i%2?materials.green:materials.greenLight)}
-function tree(p:T.Object3D,x:number,z:number,s=1){const g=group(p,x,.33,z);cyl(g,.075*s,.12*s,2.2*s,0,1.1*s,0,materials.trunk);for(let i=0;i<34;i++){const a=i*2.399,f=Math.sqrt((i+.5)/34),xx=Math.cos(a)*f*.72*s,zz=Math.sin(a)*f*.65*s,yy=(2.1+Math.sqrt(1-f*f)*.65)*s;const radius=range(.22,.36)*s;ball(g,xx,yy,zz,radius,radius*1.25,radius,xx<0?materials.greenLight:materials.green,i%2===0);if(i%9===0)beam(g,V(0,1.2*s,0),V(xx,yy-.1,zz),.04*s,materials.trunk)}shrub(g,0,0,0,s*.65)}
 function chair(p:T.Object3D,x:number,y:number,z:number,angle=0,s=1){
  const g=group(p,x,y,z,angle);g.userData.snowChair=true;if(y<.5)g.userData.dynamic=true;g.scale.setScalar(s);cyl(g,.29,.28,.075,0,.55,0,materials.lightWood,24);
  for(const xx of [-.21,.21])for(const zz of [-.2,.2])beam(g,V(xx*.8,.53,zz*.8),V(xx*1.24,0,zz*1.22),.027,materials.wood);
@@ -210,8 +211,10 @@ export function buildWorld(scene:T.Scene){
  const whiteLinen=mat(0xfaf7ef,.9);mesh(new T.LatheGeometry([new T.Vector2(0,2.77),new T.Vector2(1.15,2.33),new T.Vector2(1.15,2.31),new T.Vector2(0,2.75)],32),whiteLinen,linShade);
  for(let i=0;i<12;i++){const a=i*Math.PI/6;beam(linShade,V(0,2.75,0),V(Math.cos(a)*1.15,2.315,Math.sin(a)*1.15),.009,materials.wood)}ball(linUmbrella,0,2.98,0,.045,.07,.045,materials.brass);
 
- tree(root,-4.1,-1.4,1.08);tree(root,4.15,-2.7,1.02);tree(root,-3.8,-3.3,.82);tree(root,-3.5,4.6,.7);
- for(const [x,z,s] of [[-3.7,.8,.9],[-4.4,0,.75],[-3.1,1.6,.65],[3.3,-3.5,.7],[4.8,-3.5,.6],[-4.4,-3.65,.8],[-3.8,3.6,.45]])shrub(root,x,.25,z,s);
+ // Skip the removed trees' 4 × (34 leaf + 30 shrub) PRNG draws so all other props stay unchanged.
+ for(let i=0;i<256;i++)random();
+ // Removed seven shrubs before batching; preserve their 7 × 30 RNG draws.
+ for(let i=0;i<210;i++)random();
  fern(root,-3.22,.25,1.1,.65);fern(root,3.08,.25,-2.1,.7);fern(root,-3.2,.25,-3.1,.6);fern(root,2.5,.25,-3,.6);
  for(const [x,z] of [[-2.15,3.35],[1.1,3.4],[-4.6,1.5],[4.05,3.6],[3.35,-3.6]]){cyl(root,.065,.07,.43,x,.46,z,materials.frame);cyl(root,.06,.06,.15,x,.69,z,materials.light);cyl(root,.08,.08,.035,x,.79,z,materials.brassDark)}
  // A chimney and a roof planter echo the reference without hiding the glass.
@@ -253,7 +256,7 @@ export function buildWorld(scene:T.Scene){
  const gram=deco('gramophone',1.2,2.01,-1.8);box(gram,.48,.2,.4,0,0,0,materials.wood);cyl(gram,.18,.18,.018,0,.12,0,materials.black,32);beam(gram,V(.17,.12,0),V(.23,.5,-.1),.025,materials.brass);const horn=cyl(gram,.21,.04,.32,.2,.56,-.1,materials.brass);horn.rotation.z=-.8;
  const lantern=deco('lantern',1.9,.26,-3.6);box(lantern,.45,.06,.45,0,.03,0,materials.wood);for(const x of [-.2,.2])for(const z of [-.2,.2])beam(lantern,V(x,.05,z),V(x,.8,z),.018,materials.brass);box(lantern,.44,.04,.44,0,.82,0,materials.brass);ball(lantern,0,.4,0,.12,.16,.12,materials.light);
  const art=deco('art',2.68,2.45,-.2);box(art,.07,.62,.48,0,0,0,materials.wood);box(art,.08,.53,.39,-.008,0,0,materials.cream);for(let i=0;i<5;i++)ball(art,-.055,-.17+i*.08,Math.sin(i*2)*.08,.018,.055,.08,materials.green,true);
- actors.slice(0,3).forEach((a,i)=>{const n=i===0?0:i===1?1:2;hit('person'+n,'与'+['阿禾','林伯','棠姨'][n]+'聊聊天',a.root.position.x,a.root.position.y+1.1,a.root.position.z,.55,.7,.55)});
+ actors.slice(0,4).forEach((a,i)=>{const n=i;hit('person'+n,'与'+['阿禾','林伯','棠姨','客人'][n]+'聊聊天',a.root.position.x,a.root.position.y+1.1,a.root.position.z,.55,.7,.55)});
 
  for(const x of [-2.75,2.75])for(let i=0;i<=5;i++)for(const y of [.85,1.83,2.87,3.2]){const z=-2.62+i*.914;box(root,.025,.12,.12,x,y,z,materials.frame,.004);ball(root,x+Math.sign(x)*.042,y,z,.014,.019,.019,materials.frameEdge)}
  for(const z of [-2.62,1.95])for(let i=0;i<=5;i++)for(const y of [.85,1.83,2.87,3.2]){const x=-2.75+i*1.1;box(root,.12,.12,.025,x,y,z,materials.frame,.004);ball(root,x,y,z+Math.sign(z)*.042,.019,.019,.014,materials.frameEdge)}
@@ -278,11 +281,13 @@ export function buildWorld(scene:T.Scene){
  let shelfRoofClearance=Infinity;
  shelfWall.traverse(o=>{if(!(o instanceof T.Mesh))return;const bounds=new T.Box3().setFromObject(o);const outerX=Math.max(Math.abs(bounds.min.x),Math.abs(bounds.max.x));shelfRoofClearance=Math.min(shelfRoofClearance,ridge-.5*outerX-bounds.max.y)});
  const diagnostics=()=>({french,upholsteredChairs:[...heroChairs,windowChair].map(c=>c.userData.upholstery),machineDirection:V(0,0,1).transformDirection(machine.matrixWorld).toArray(),machinePosition:machine.getWorldPosition(V(0,0,0)).toArray(),baristaPosition:actors[0].root.getWorldPosition(V(0,0,0)).toArray(),patioGuest:{role:actors[3].role,position:actors[3].root.position.toArray(),chair:[3.55,.26,-.42],facing:actors[3].root.rotation.y},overviewBounds,rugCenter:decorations.rug.position.toArray(),pendants:globes.map(g=>({visible:g.visible,emissive:(g.material as T.MeshStandardMaterial).emissiveIntensity,position:g.position.toArray()})),tang:{role:actors[2].role,position:actors[2].root.getWorldPosition(V(0,0,0)).toArray(),chair:actors[2].role==='garden-tang'?null:[3.55,.26,-.42]},snowSurfaces,seating,furnitureClearances,shelfRoofClearance,countertopY:1.91,heroBounds:{min:heroFrameBounds.min.toArray(),max:heroFrameBounds.max.toArray()},kettleMinY:new T.Box3().setFromObject(actors[0].kettle!).min.y,kettleGripError:actors[0].armR.localToWorld(V(.025,-.34,.025)).distanceTo(actors[0].kettleGrip!.getWorldPosition(V(0,0,0))),umbrellaSpread:umbrellaShade.scale.x,linUmbrellaSpread:linShade.scale.x,umbrellaPoleScale:umbrella.scale.toArray(),service:{...service,server:actors[4].root.position.toArray(),cup:tableCups[service.tableIndex].position.toArray(),pouring:refillStream.visible,tableCount:tableCups.length,tableTarget:cupTarget.toArray()},sign:'SKYE ISLAND'});
- const seasonalFoliage:T.Mesh[]=[];const summerBatches=new Map<Material,T.BufferGeometry[]>();const patioChairs:T.Group[]=[];root.traverse(o=>{if(o.userData.snowChair&&o.position.y<.5)patioChairs.push(o as T.Group)});
+ const seasonalFoliage:T.Object3D[]=[];const summerBatches=new Map<Material,T.BufferGeometry[]>();const patioChairs:T.Group[]=[];root.traverse(o=>{if(o.userData.snowChair&&o.position.y<.5)patioChairs.push(o as T.Group)});
  const batches=new Map<Material,{geos:T.BufferGeometry[],shadow:boolean}>();const toRemove:T.Mesh[]=[];
  root.traverse(o=>{if(!(o instanceof T.Mesh))return;let a:T.Object3D|null=o;while(a&&a!==root){if(a.userData.dynamic)return;a=a.parent}const m=o.material as Material;const wp=o.getWorldPosition(new T.Vector3());const outdoor=Math.abs(wp.x)>2.8||wp.z>2.2||wp.z< -2.8||wp.y>3.3;const seasonal=m===materials.trunk||outdoor&&[materials.green,materials.greenLight,materials.greenDark].includes(m as T.MeshStandardMaterial);if(seasonal){const geo=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();geo.applyMatrix4(o.matrixWorld);geo.deleteAttribute('uv1');geo.deleteAttribute('tangent');if(!summerBatches.has(m))summerBatches.set(m,[]);summerBatches.get(m)!.push(geo);toRemove.push(o);return}if(!batches.has(m))batches.set(m,{geos:[],shadow:o.castShadow});const geo=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();geo.applyMatrix4(o.matrixWorld);geo.deleteAttribute('uv1');geo.deleteAttribute('tangent');batches.get(m)!.geos.push(geo);toRemove.push(o)});
  for(const [m,b] of batches){const geo=mergeGeometries(b.geos,false);if(geo){const o=new T.Mesh(geo,m);o.castShadow=b.shadow;o.receiveShadow=true;scene.add(o)}for(const g of b.geos)g.dispose()}for(const [m,geos] of summerBatches){const geo=mergeGeometries(geos,false);if(geo){const o=new T.Mesh(geo,m);o.castShadow=true;o.receiveShadow=true;scene.add(o);seasonalFoliage.push(o)}geos.forEach(g=>g.dispose())}for(const o of toRemove)o.removeFromParent();
- return {interior:{counter,shelfWall,machine,grinder,heroTable,windowTable,heroChairs,windowChair,bed},root,actors,door,sign,patioChairs,patioSummerProps,tableCups,linUmbrella,setPatioWinter,seasonalFoliage,hotspots,steam,lamps,globes,umbrella,umbrellaShade,linShade,snowSurfaces,rainProps,decorations,updateService,diagnostics};
+ const treeAssets=createTreeAssets(scene,seasonalFoliage);
+ const bushAssets=createBushAssets(scene,seasonalFoliage);
+ return {treeAssets,bushAssets,interior:{counter,shelfWall,machine,grinder,heroTable,windowTable,heroChairs,windowChair,bed},root,actors,door,sign,patioChairs,patioSummerProps,tableCups,linUmbrella,setPatioWinter,seasonalFoliage,hotspots,steam,lamps,globes,umbrella,umbrellaShade,linShade,snowSurfaces,rainProps,decorations,updateService,diagnostics};
 }
 
 export function updatePeople(actors:Actor[],t:number,order:number){

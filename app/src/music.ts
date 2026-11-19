@@ -8,7 +8,7 @@ export class CafeMusic {
  get name(){return this.inside()?this.raining()?'雨中小馆 · 轻爵士':'温室午后 · 古典风轻钢琴':this.raining()?'雨落庭院 · 自然雨声':this.sunny()?'海岛晴日 · 海浪与海鸥':'庭院微风 · 风声白噪音'}
  private get track(){return this.inside()||this.entering?this.raining()?this.jazz:this.audio:this.sunny()?this.sea:null}
  constructor(private inside:()=>boolean,private raining:()=>boolean,private changed:()=>void,private sunny:()=>boolean=()=>!raining()){
-  for(const a of [this.audio,this.jazz,this.sea]){a.loop=true;a.preload='auto'}
+  for(const a of [this.audio,this.jazz,this.sea]){a.loop=true;a.preload='none'}
   try{const v=Number(localStorage.getItem('cafe-volume')??.35);this.volume=Number.isFinite(v)?Math.max(0,Math.min(1,v)):.35;this.enabled=localStorage.getItem('cafe-built-in-music-enabled')!=='false'}catch{}
   for(const a of [this.audio,this.jazz,this.sea])a.volume=this.volume;
   for(const a of [this.audio,this.jazz,this.sea])a.addEventListener('error',()=>{if(a===this.track){this.status='配乐暂时未能加载，点击音乐按钮重试';this.changed()}});

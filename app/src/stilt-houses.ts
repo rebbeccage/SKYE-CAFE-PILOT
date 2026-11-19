@@ -29,7 +29,11 @@ export function createStiltHouses(scene:T.Scene,mobile:boolean){
  const wind:{root:T.Group;phase:number;kind:'cloth'|'plant'}[]=[];
  const houseDiagnostics:{name:string;center:number[];yaw:number;door:number[];bounds:{min:number[];max:number[]};seabed:number;roof:number}[]=[];
  const railTop=.76;
- function rail(p:T.Object3D,a:T.Vector3,b:T.Vector3,withSnow=true){
+ const railRequests:{a:T.Vector3;b:T.Vector3}[]=[];
+ const railPieces:{from:number[];to:number[]}[]=[];
+ function rail(p:T.Object3D,a:T.Vector3,b:T.Vector3,_withSnow=true){p.updateWorldMatrix(true,false);railRequests.push({a:p.localToWorld(a.clone()),b:p.localToWorld(b.clone())});}
+
+ function buildRail(p:T.Object3D,a:T.Vector3,b:T.Vector3,withSnow=true){
   const d=a.distanceTo(b),steps=Math.max(1,Math.ceil(d/.72));
   branch(p,a.clone().add(V(0,railTop,0)),b.clone().add(V(0,railTop,0)),.027,lightWood,.027);
   branch(p,a.clone().add(V(0,.36,0)),b.clone().add(V(0,.36,0)),.018,wood,.018);
@@ -196,6 +200,12 @@ export function createStiltHouses(scene:T.Scene,mobile:boolean){
  walkway(bypassStart,bypassElbow,.90,false,true);
  walkway(bypassElbow,entries[2],.90,true);
 
+ // Cut visual rails at every actual crossing deck, including the approved C-house bypass.
+ // A rail lying along its own deck edge stays; a crossing deck creates a clear opening.
+ for(const request of railRequests){const {a,b}=request,d=b.clone().sub(a),length=Math.hypot(d.x,d.z),n=Math.max(1,Math.ceil(length/.06));let start=-1;
+  const blocked=(f:number)=>{const x=a.x+d.x*f,z=a.z+d.z*f;return walkSegments.some(seg=>{const [ax,,az]=seg.from,[bx,,bz]=seg.to,dx=bx-ax,dz=bz-az,l=Math.hypot(dx,dz);if(l<.01)return false;const parallel=Math.abs((d.x*dz-d.z*dx)/(Math.max(.001,length)*l))<.08;if(parallel)return false;const along=((x-ax)*dx+(z-az)*dz)/(l*l),perp=Math.abs((x-ax)*dz-(z-az)*dx)/l;return along>=-.23/l&&along<=1+.23/l&&perp<seg.width/2+.20;});};
+  for(let i=0;i<=n;i++){const clear=i<n&&!blocked((i+.5)/n);if(clear&&start<0)start=i;if(!clear&&start>=0){const aa=a.clone().lerp(b,start/n),bb=a.clone().lerp(b,i/n);if(aa.distanceTo(bb)>.12){buildRail(fixed,aa,bb);railPieces.push({from:aa.toArray(),to:bb.toArray()});}start=-1;}}
+ }
  // Local animated props are deliberately excluded from static material batches.
  const animated=group(root);for(const w of wind){root.updateWorldMatrix(true,true);animated.attach(w.root);}
  consolidate(fixed);consolidate(snow);
@@ -212,5 +222,5 @@ export function createStiltHouses(scene:T.Scene,mobile:boolean){
   for(const w of wind){const amount=state==='snow'?.18:state==='rain'?.35:1;w.root.rotation.z=Math.sin(t*.7+w.phase)*.023*amount;w.root.rotation.x=Math.sin(t*.51+w.phase)*.012*amount;}
  }
  update(0,'sun',0,0);
- return {root,update,diagnostics:()=>({count:3,side:'east / outdoor cafe seating',floor:FLOOR,deckUnderside:FLOOR-DECK_THICKNESS,conservativeWaveCeiling:SEA_LEVEL+.4+.64*1.5,houses:houseDiagnostics,piles,deckChecks,walkSegments,shoreLanding:shoreStart.toArray(),snow:snow.visible,weather,windowEmission:glass.emissiveIntensity,staticBatches:fixed.children.filter(o=>o instanceof T.Mesh).length,snowBatches:snow.children.filter(o=>o instanceof T.Mesh).length,movingProps:wind.length,additionalLights:0,additionalReflectionPasses:0,mobile})};
+ return {root,update,diagnostics:()=>({count:3,side:'east / outdoor cafe seating',floor:FLOOR,deckUnderside:FLOOR-DECK_THICKNESS,conservativeWaveCeiling:SEA_LEVEL+.4+.64*1.5,houses:houseDiagnostics,piles,deckChecks,walkSegments,railPieces,shoreLanding:shoreStart.toArray(),snow:snow.visible,weather,windowEmission:glass.emissiveIntensity,staticBatches:fixed.children.filter(o=>o instanceof T.Mesh).length,snowBatches:snow.children.filter(o=>o instanceof T.Mesh).length,movingProps:wind.length,additionalLights:0,additionalReflectionPasses:0,mobile})};
 }

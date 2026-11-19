@@ -51,7 +51,8 @@ export function createCinema(scene:T.Scene){
  for(const g of [fixed,soft,equipment,snow,lamps])consolidate(g);
  const point=V(sx,sy+1.25,sz),hit=new T.Mesh(new T.BoxGeometry(2.8,2.4,.3),new T.MeshBasicMaterial({visible:false}));hit.position.copy(point);hit.userData.hit='cinema';root.add(hit);
  for(const bounds of colliders){const proxy=new T.Mesh(new T.BoxGeometry(...bounds.getSize(V(0,0,0)).toArray() as [number,number,number]),new T.MeshBasicMaterial({visible:false}));proxy.position.copy(bounds.getCenter(V(0,0,0)));proxy.userData.collision=true;proxy.name='Cinema static collision proxy';root.add(proxy)}
- let open=0,available=false,lastFrame=-1,filmMode=false,currentWeather='sun';
+ let open=0,available=false,lastFrame=-1,filmMode=false,currentWeather='sun',manualProjection:boolean|null=null;
+ const projectorPoint=V(-17.2,crate.position.y+.65,4.7),projectorHit=new T.Mesh(new T.BoxGeometry(.8,1,.8),new T.MeshBasicMaterial({visible:false}));projectorHit.position.copy(projectorPoint);projectorHit.userData.hit='projector';root.add(projectorHit);
  function paint(t:number,watching:boolean){
   const w=512,h=320;ctx.fillStyle=watching?'#bcbcaf':'#d9b6aa';ctx.fillRect(0,0,w,h);const grad=ctx.createLinearGradient(0,0,0,h);grad.addColorStop(0,watching?'#7b8383':'#9298b3');grad.addColorStop(.6,watching?'#bfc0b3':'#cfaaad');grad.addColorStop(1,watching?'#a2aaa2':'#e3c4aa');ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
   // Original paper-cut landscape: clouds, waves and a tiny sailing boat, no sourced film.
@@ -64,12 +65,14 @@ export function createCinema(scene:T.Scene){
  return {root,hotspot:{id:'cinema',label:'坐下来，看一会儿老电影。',point,mesh:hit},colliders,
   eye:V(-18,beachGround(-18,5.8)+1.02,5.65),focus:target,
   get available(){return available},
+  projectorHotspot:{id:'projector',get label(){return currentWeather!=='sun'?'雨雪天，放映机已收好':available?'点击放映机，收起幕布':'点击放映机，放下幕布'},point:projectorPoint,mesh:projectorHit},
+  toggleProjection(weather:string){if(weather!=='sun')return false;manualProjection=!available;available=manualProjection;return true;},
   update(t:number,dt:number,weather:'sun'|'rain'|'snow',dusk:boolean,watching:boolean,camera:T.Camera,inside:boolean){
-   currentWeather=weather;available=weather==='sun'&&dusk&&!inside;filmMode=available&&watching;
+   currentWeather=weather;if(weather!=='sun')manualProjection=null;available=weather==='sun'&&(manualProjection??dusk)&&!inside;filmMode=available&&(watching||manualProjection===true);
    const desired=available?1:.02;open=T.MathUtils.damp(open,desired,3.5,dt);curtain.scale.y=Math.max(.02,open);snow.visible=weather==='snow';soft.visible=weather==='sun';equipment.visible=weather==='sun';
    const distance=camera.position.distanceTo(target),near=watching||distance<38||(camera instanceof T.OrthographicCamera&&camera.zoom>.5&&!inside);
    beam.visible=available&&near&&open>.95;light.emissiveIntensity=T.MathUtils.damp(light.emissiveIntensity,available?(near?.75:.22):weather==='rain'&&dusk?.08:0,3,dt);
    wetMaterials.forEach((m,i)=>{m.color.copy(colors[i]).multiplyScalar(weather==='rain'?.79:1);m.roughness=weather==='rain'?.7:.9});
    const frame=Math.floor(t*(mobile?8:12));if(available&&!inside&&near&&frame!==lastFrame){paint(t,filmMode);lastFrame=frame}
-  },diagnostics:()=>({available,watching:filmMode,weather:currentWeather,unrolled:open,projectorVisible:equipment.visible,softVisible:soft.visible,snow:snow.visible,beam:beam.visible,lights:light.emissiveIntensity,placements,screen:[sx,sy,sz],screenWidth:2.68,seatCapacity:6,reusedLoungers:2,addedLoungers:1,cushions:3,colliders:colliders.map(b=>({min:b.min.toArray(),max:b.max.toArray()})),draws:fixed.children.filter(o=>o instanceof T.Mesh).length+soft.children.filter(o=>o instanceof T.Mesh).length+equipment.children.filter(o=>o instanceof T.Mesh).length,liveLights:0,texture:[512,320],film:'original abstract sailboat loop'})};
+  },diagnostics:()=>({available,manualProjection,watching:filmMode,weather:currentWeather,unrolled:open,projectorVisible:equipment.visible,softVisible:soft.visible,snow:snow.visible,beam:beam.visible,lights:light.emissiveIntensity,placements,screen:[sx,sy,sz],screenWidth:2.68,seatCapacity:6,reusedLoungers:2,addedLoungers:1,cushions:3,colliders:colliders.map(b=>({min:b.min.toArray(),max:b.max.toArray()})),draws:fixed.children.filter(o=>o instanceof T.Mesh).length+soft.children.filter(o=>o instanceof T.Mesh).length+equipment.children.filter(o=>o instanceof T.Mesh).length,liveLights:0,texture:[512,320],film:'original abstract sailboat loop'})};
 }

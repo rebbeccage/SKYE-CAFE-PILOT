@@ -8,7 +8,7 @@ export class PlayerCollision {
  readonly position:Point;readonly safe:Point;velocity={x:0,z:0};surface:Surface;
  sample:(x:number,z:number)=>Surface|null;obstacles:Obstacle[];
  constructor(sample:(x:number,z:number)=>Surface|null,obstacles:Obstacle[],spawn:Point){this.sample=sample;this.obstacles=obstacles;this.position={...spawn};this.safe={...spawn};this.surface=sample(spawn.x,spawn.z)!;this.position.y=this.safe.y=this.surface.height;}
- blocked(x:number,z:number,y:number){return this.obstacles.some(o=>{if((o.top??10)<y+.15||(o.bottom??-10)>y+1.7)return false;const c=Math.cos(o.yaw??0),s=Math.sin(o.yaw??0),dx=x-o.x,dz=z-o.z,lx=c*dx-s*dz,lz=s*dx+c*dz;return Math.hypot(Math.max(0,Math.abs(lx)-o.halfX),Math.max(0,Math.abs(lz)-o.halfZ))<PLAYER_RADIUS;});}
+ blocked(x:number,z:number,y:number){return this.obstacles.some(o=>{if((o.top??10)<y+.15||(o.bottom??-10)>y+1.7)return false;if(Math.abs(x-o.x)>o.halfX+o.halfZ+PLAYER_RADIUS||Math.abs(z-o.z)>o.halfX+o.halfZ+PLAYER_RADIUS)return false;const c=Math.cos(o.yaw??0),s=Math.sin(o.yaw??0),dx=x-o.x,dz=z-o.z,lx=c*dx-s*dz,lz=s*dx+c*dz;return Math.hypot(Math.max(0,Math.abs(lx)-o.halfX),Math.max(0,Math.abs(lz)-o.halfZ))<PLAYER_RADIUS;});}
  valid(x:number,z:number,from=this.position){const a=this.sample(x,z);if(!a||this.blocked(x,z,a.height))return null;const d=Math.hypot(x-from.x,z-from.z),rise=a.height-from.y;
   // Low steps are allowed, larger cliffs and unsupported deck edges are not.
   const step=a.kind!=='sand'||this.surface.kind!=='sand'? .23:.012;

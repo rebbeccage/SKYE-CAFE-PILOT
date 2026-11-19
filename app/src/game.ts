@@ -1,3 +1,6 @@
+import aheThumb from './assets/portraits/ahe-thumb.webp';
+import linThumb from './assets/portraits/lin-thumb.webp';
+import tangThumb from './assets/portraits/tang-thumb.webp';
 import {navigationButton} from './ui-components';
 import {createWarehouse} from './warehouse';
 import strawberryArt from './assets/ui/strawberry-oat-latte.png';
@@ -40,7 +43,7 @@ export function initGame(api:{monaContext?:()=>MonaContext,talkTargets:(fn:(n:nu
  const item=(i:number)=>`<span class="item-art" style="--col:${i%5};--row:${Math.floor(i/5)}"></span>`;
  const portraitAssets=[linPortrait,ahePortrait,tangPortrait],portraitNames=['林伯','阿禾','棠姨'];
  const portrait=(i:number)=>`<img class="portrait encounter-portrait" src="${portraitAssets[i]}" alt="${portraitNames[i]}的水彩头像" width="83" height="83">`;
- const hud=createPlayerHud(root,characters.map(c=>({name:c.name,url:portraitAssets[c.portrait]})),i=>people(i));
+ const hud=createPlayerHud(root,characters.map(c=>({name:c.name,url:[linThumb,aheThumb,tangThumb][c.portrait]})),i=>people(i));
  function persist(){try{if(!storageBlocked)localStorage.setItem(key,JSON.stringify(save))}catch{api.toast('浏览器未允许保存；本次游玩仍可继续。')}hud.update(save);api.decorate(save.placed.filter(id=>save.owned.includes(id)));api.gardenVisual?.(gardenVisual(save));updateGoal()}
  function updateGoal(){
   hud.update(save);

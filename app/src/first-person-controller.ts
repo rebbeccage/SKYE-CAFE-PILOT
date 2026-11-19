@@ -1,3 +1,4 @@
+import {ObstacleGuide} from './obstacle-guide';
 import * as T from 'three';
 import {PlayerCollision} from './player-collision';
 export type CameraMode='FIRST_PERSON'|'OVERVIEW'|'INTERIOR'|'SEATED'|'DIALOGUE'|'TRANSITION';
@@ -6,7 +7,7 @@ export class FirstPersonController {
  readonly collisionBody=new T.Group();readonly cameraPivot=new T.Group();readonly camera:T.PerspectiveCamera;
  yaw=Math.PI;pitch=-.06;sensitivity=.0022;enabled=false;fallback=false;touch=false;engaged=false;gestureMoved=false;
  private keys=new Set<string>();private pointers=new Map<number,{x:number;y:number}>();private pinch=0;private eyeY=0;
- axis={x:0,y:0};distance=0;target=new T.Vector3();
+ readonly obstacleGuide=new ObstacleGuide();private before={x:0,y:0,z:0};axis={x:0,y:0};distance=0;target=new T.Vector3();
  constructor(readonly body:PlayerCollision,readonly canvas:HTMLCanvasElement,aspect:number){
   this.camera=new T.PerspectiveCamera(60,aspect,.04,2000);this.collisionBody.add(this.cameraPivot);// The render lens mirrors the pivot in world space for existing water/sky passes.
   this.eyeY=body.position.y+1.6;this.updateCamera(1);
@@ -26,9 +27,9 @@ export class FirstPersonController {
  lock(){if(!this.enabled)return;if(!this.canvas.requestPointerLock){this.fallback=true;return;}try{const p=this.canvas.requestPointerLock();if(p)p.catch(()=>{this.fallback=true})}catch{this.fallback=true;}}
  look(x:number,y:number){this.yaw-=x*this.sensitivity;this.pitch=T.MathUtils.clamp(this.pitch-y*this.sensitivity,-40*Math.PI/180,55*Math.PI/180);}
  setFov(v:number){this.camera.fov=T.MathUtils.clamp(v,52,68);this.camera.updateProjectionMatrix();}
- stop(){this.keys.clear();this.axis.x=this.axis.y=0;this.body.stop();this.pointers.clear();this.pinch=0;}
+ stop(){this.obstacleGuide.reset();this.keys.clear();this.axis.x=this.axis.y=0;this.body.stop();this.pointers.clear();this.pinch=0;}
  pause(){this.enabled=false;this.engaged=false;this.stop();if(document.pointerLockElement===this.canvas)document.exitPointerLock();}
- update(dt:number){if(this.enabled){const forward=(this.keys.has('KeyW')?1:0)-(this.keys.has('KeyS')?1:0)+this.axis.y,side=(this.keys.has('KeyD')?1:0)-(this.keys.has('KeyA')?1:0)+this.axis.x;this.distance+=this.body.step(Math.min(dt,.1),forward,side,this.yaw,this.keys.has('ShiftLeft')||this.keys.has('ShiftRight'));}this.updateCamera(dt);}
+ update(dt:number){if(this.enabled){const forward=(this.keys.has('KeyW')?1:0)-(this.keys.has('KeyS')?1:0)+this.axis.y,side=(this.keys.has('KeyD')?1:0)-(this.keys.has('KeyA')?1:0)+this.axis.x;Object.assign(this.before,this.body.position);this.distance+=this.body.step(Math.min(dt,.1),forward,side,this.yaw,this.keys.has('ShiftLeft')||this.keys.has('ShiftRight'));const heading=this.yaw+Math.atan2(-side,forward);this.obstacleGuide.update(dt,this.body,this.before,!!(forward||side),heading);}this.updateCamera(dt);}
  private updateCamera(dt:number){const p=this.body.position;this.collisionBody.position.set(p.x,p.y,p.z);this.eyeY=T.MathUtils.damp(this.eyeY,p.y+1.6,14,dt);this.cameraPivot.position.set(0,this.eyeY-p.y,0);this.cameraPivot.rotation.set(this.pitch,this.yaw+Math.PI,0,'YXZ');this.collisionBody.updateMatrixWorld(true);this.cameraPivot.getWorldPosition(this.camera.position);this.target.set(p.x+Math.sin(this.yaw)*Math.cos(this.pitch),this.eyeY+Math.sin(this.pitch),p.z+Math.cos(this.yaw)*Math.cos(this.pitch));this.camera.lookAt(this.target);this.camera.updateMatrixWorld(true);}
- diagnostics(){return {position:{...this.body.position},yaw:this.yaw,pitch:this.pitch,eye:this.camera.getWorldPosition(new T.Vector3()).toArray(),fov:this.camera.fov,enabled:this.enabled,locked:document.pointerLockElement===this.canvas,fallback:this.fallback,engaged:this.engaged,surface:this.body.surface.kind,travelled:this.distance};}
+ diagnostics(){return {position:{...this.body.position},yaw:this.yaw,pitch:this.pitch,eye:this.camera.getWorldPosition(new T.Vector3()).toArray(),fov:this.camera.fov,enabled:this.enabled,locked:document.pointerLockElement===this.canvas,fallback:this.fallback,engaged:this.engaged,surface:this.body.surface.kind,travelled:this.distance,obstacleDirection:this.obstacleGuide.yaw};}
 }

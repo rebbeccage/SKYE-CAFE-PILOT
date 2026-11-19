@@ -130,7 +130,7 @@ export function createIslandProps(scene:T.Scene,mobile=false) {
     collider(g);
   }
   {
-    const {g,s}=place('Shallow handcart with terracotta and burlap',-7.25,6.85,-.35);
+    const {g,s}=place('Shallow handcart with terracotta and burlap',-10.6,-2.6,-.35);
     for(let j=0;j<6;j++){box(g,.19,.055,.79,-.5+j*.2,.35,0,wood);cap(s,.175,.73,-.5+j*.2,.378,0,.045);}
     for(const z of [-.42,.42]){box(g,1.27,.19,.055,0,.455,z,woodPale);cap(s,1.25,.05,0,.55,z,.043);}
     for(const x of [-.63,.63]){box(g,.055,.19,.87,x,.455,0,wood);cap(s,.05,.83,x,.55,0,.043);}
@@ -281,7 +281,7 @@ export function createIslandProps(scene:T.Scene,mobile=false) {
     const positions=[...a.toArray(),...mid.clone().add(side).toArray(),...mid.clone().add(V(0,.035,0)).toArray(),...mid.clone().sub(side).toArray(),...b.toArray()];
     const g=geo(positions,[0,1,2,0,2,3,1,4,2,2,4,3]);g.setAttribute('beachFlex',new T.Float32BufferAttribute([0,.55,.5,.55,1].map(v=>v*flex),1));return mesh(p,g,m);
   }
-  for(const [idx,x,z,height,lean] of [[0,-10.8,.9,4.1,-.4],[1,9.0,-1.7,3.65,.48]]){
+  for(const [idx,x,z,height,lean] of [[0,-10.8,.9,4.1,-.4],[1,9.0,-1.7,3.65,.48],[2,19.5,-3.6,3.8,.28],[3,18.2,1.6,3.4,-.3],[4,20.2,10.2,3.7,.22]]){
     const {g,s}=groundPlace('Curving palm '+(idx+1),x,z,0),crown=V(lean,height,idx?.16:-.14),segments=mobile?7:10;
     for(let k=0;k<segments;k++){const t=k/segments,t1=(k+1)/segments,a=V(lean*t*t,height*t,crown.z*t*t),b=V(lean*t1*t1,height*t1,crown.z*t1*t1);branch(g,a,b,.115-t*.045,woodDark,.115-t1*.045);if(k%2===0){const r=ring(g,.114-t*.045,.008,a.x,a.y+.02,a.z,woodPale);r.rotation.z=lean*.14;}}
     rounded(g,.15,crown.x,crown.y,crown.z,seaGreen,1,.8,1);
@@ -292,7 +292,10 @@ export function createIslandProps(scene:T.Scene,mobile=false) {
       const bladeGeo=geo(ribbon,ribbonIds);bladeGeo.setAttribute('beachFlex',new T.Float32BufferAttribute(flex,1));mesh(g,bladeGeo,j%2?leafShade:leafLight);
       for(let k=0;k<6;k++){const start=points[k],end=points[k+1];branch(g,start,end,.009,leafShade,.004);for(const sign of [-1,1]){const t=(k+1)/7,w=.25*Math.sin(t*Math.PI)+.1;const tip=end.clone().add(V(Math.cos(a+.85*sign)*w,-.15,Math.sin(a+.85*sign)*w));leaf(g,start,tip,.065,j%5===0?leafDry:j%2?leafLight:leafShade,(k+1)/6);}}
       if(j%2===0)branch(s,crown.clone().add(V(0,.025,0)),points[3].clone().add(V(0,.03,0)),.025,snowMat,.014);
-    }palms.push({x,z,height,canopyRadius:1.9});
+    }
+    for(let k=0;k<4;k++){const a=k*1.7;rounded(g,.115,crown.x+Math.cos(a)*.16,crown.y-.13,crown.z+Math.sin(a)*.16,k%2?woodDark:seaGreen,1,.9,.95);}
+    if(idx>=2)for(let k=0;k<3;k++){const cx=x+Math.cos(k*2.1+idx)*(.7+k*.21),cz=z+Math.sin(k*2.1+idx)*(.7+k*.21),c=groundPlace('Fallen coconut',cx,cz,k);rounded(c.g,.13,0,.12,0,woodDark,1.15,.85,1);for(let j=0;j<3;j++)rounded(c.g,.014,(j-1)*.025,.218,.035,woodPale,1,.5,1);rounded(c.s,.11,0,.22,0,snowMat,1,.18,1);}
+    palms.push({x,z,height,canopyRadius:1.9});
   }
   // Four irregular low groups leave the majority of sand unoccupied.
   const plantGroups=[[-9.8,6.1,.9],[6.55,4.9,.85],[-10.8,.9,.8],[8,-3.4,.8]];
@@ -414,7 +417,7 @@ export function createIslandProps(scene:T.Scene,mobile=false) {
     for(const {m,color,roughness,amount} of wetMaterials){m.color.copy(color).multiplyScalar(weather==='rain'?amount:1);m.roughness=weather==='rain'?Math.max(.34,roughness*.67):roughness;}
   }
   return {root,update,boardwalk:{start,end,length,planks,topAtZ:boardwalkTopAtZ},colliders,diagnostics:()=>({
-    weather:currentWeather,beachLife:{palms:2,parasols:2,deckchairs:2,smallTables:1,wind:wind.value,windDirection:[1,0,0],tideDatum:waterLevel.value,mobile,roots,contactChecks,palmsLayout:palms,footprints:printLocations,terrainSampling:"existing rendered grid"},drawCalls:tracks.children.filter(o=>o instanceof T.Mesh&&tracks.visible).length+fixed.children.filter(o=>o instanceof T.Mesh).length+((snow.visible?snow:puddles).visible?(snow.visible?snow:puddles).children.filter(o=>o instanceof T.Mesh).length:0),
+    weather:currentWeather,beachLife:{palms:palms.length,coconutsOnTrees:palms.length*4,fallenCoconuts:9,parasols:2,deckchairs:2,smallTables:1,wind:wind.value,windDirection:[1,0,0],tideDatum:waterLevel.value,mobile,roots,contactChecks,palmsLayout:palms,footprints:printLocations,terrainSampling:"existing rendered grid"},drawCalls:tracks.children.filter(o=>o instanceof T.Mesh&&tracks.visible).length+fixed.children.filter(o=>o instanceof T.Mesh).length+((snow.visible?snow:puddles).visible?(snow.visible?snow:puddles).children.filter(o=>o instanceof T.Mesh).length:0),
     objects:labels,boardwalk:{start:start.toArray(),end:end.toArray(),length,width,planks:planks.length,gap,shorelineZ,
       underwaterPlanks:planks.filter(p=>p.underwater).map(p=>p.index),warpedPlanks:planks.filter(p=>p.warped).map(p=>p.index),
       entryUndersideGap:boardwalkTop(startZ,0)-.052-beachGround(x,startZ),lastDryPlank:planks.filter(p=>!p.underwater).at(-1)?.center.toArray()},colliders:colliders.length,
